@@ -87,7 +87,7 @@ Current development status and production readiness for each core module:
 
 | Module      | Devnet      | Testnet     | Mainnet             | Test Coverage         | Status                                | Known Limitations                     |
 | ----------- | ----------- | ----------- | ------------------- | --------------------- | ------------------------------------- | ------------------------------------- |
-| **Guard**   | ✅ Ready    | ✅ Ready    | ⚠️ Use with Caution | Minimal (1 test)      | Core detection works, limited testing | Discord webhooks incomplete           |
+| **Guard**   | ✅ Ready    | ✅ Ready    | ⚠️ Use with Caution | Good (86 tests)       | Comprehensive pattern detection       | Discord webhooks incomplete           |
 | **Risk**    | ✅ Ready    | ✅ Ready    | ⚠️ MVP Only         | Good (8 test files)   | Production MVP with fallback          | Switchboard/Pyth oracles TODO         |
 | **Loom**    | ✅ Ready    | ✅ Ready    | ⚠️ Partial          | Minimal (1 test file) | Jito bundles work                     | ShredStream gRPC not implemented      |
 | **Privacy** | ⚠️ Untested | ⚠️ Untested | ❌ Not Ready        | None (0 tests)        | Light Protocol integrated             | Phase 2 needs validation              |
@@ -101,7 +101,7 @@ Current development status and production readiness for each core module:
 
 **Recommendations:**
 
--   **Production Apps**: Use Guard (basic validation) + Risk (MVP) only
+-   **Production Apps**: Use Guard (comprehensive validation) + Risk (MVP) only
 -   **Development/Testing**: All modules available on devnet
 -   **Experimental Features**: Flow, Privacy require additional development before production use
 

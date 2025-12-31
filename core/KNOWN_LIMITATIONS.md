@@ -1,7 +1,7 @@
 # Known Limitations
 
-**Last Updated**: December 30, 2025
-**SDK Version**: v0.3.0 (Beta)
+**Last Updated**: January 1, 2025
+**SDK Version**: v0.3.1 (Beta)
 
 This document provides transparency about the current limitations and development status of each Fabrknt module. We believe in clear communication about what works, what's in progress, and what requires caution.
 
@@ -15,7 +15,7 @@ Fabrknt is actively developed and tested primarily on **devnet and testnet**. In
 
 | Module | Devnet | Testnet | Mainnet | Primary Limitation |
 |--------|--------|---------|---------|-------------------|
-| **Guard** | ✅ Ready | ✅ Ready | ⚠️ Use with Caution | Minimal test coverage (1 test) |
+| **Guard** | ✅ Ready | ✅ Ready | ⚠️ Use with Caution | Discord webhooks incomplete |
 | **Risk** | ✅ Ready | ✅ Ready | ⚠️ MVP Only | Oracle integrations incomplete |
 | **Loom** | ✅ Ready | ✅ Ready | ⚠️ Partial | ShredStream gRPC not implemented |
 | **Privacy** | ⚠️ Untested | ⚠️ Untested | ❌ Not Ready | No automated tests |
@@ -26,26 +26,38 @@ Fabrknt is actively developed and tested primarily on **devnet and testnet**. In
 ## 1. Guard (Security Validation Layer)
 
 ### ✅ What Works
-- Real-time transaction pattern detection (4 patterns implemented)
-- Solana RPC integration for live transaction analysis
-- Signer verification and validation
+- Real-time transaction pattern detection (8 patterns implemented: P-101 to P-108)
+- Solana and EVM transaction analysis
+- Unified transaction validation (multi-chain support)
+- Pattern detection for Solana (Mint Kill, Freeze Kill, Signer Mismatch, Dangerous Close, Transfer Hooks)
+- EVM security patterns (Reentrancy, Flash Loans, Front-running, Unauthorized Access)
+- Risk assessment integration (Pulsar)
+- Privacy validation
 - Comprehensive error handling
 - Color-coded terminal output
 
-### ⚠️ Known Limitations
+### ✅ Test Coverage (Updated)
+- **86 tests** across 4 test files:
+  - `guard-detector.test.ts`: 23 tests covering Solana pattern detection (P-101 to P-108)
+  - `guard-validator.test.ts`: 17 tests for unified transaction validation
+  - `guard-evm-detector.test.ts`: 27 tests for EVM security patterns
+  - `guard.test.ts`: Existing integration tests
+- Comprehensive coverage of:
+  - Pattern detection (all 8 patterns)
+  - Transfer Hook analysis (malicious hooks, reentrancy, excessive accounts)
+  - EVM attack detection (reentrancy, flash loans, front-running, unauthorized access)
+  - Emergency stop functionality
+  - Risk integration
+  - Privacy validation
+  - Edge cases and error handling
 
-**Test Coverage**
-- Only 1 unit test exists (`detector.rs` warning format test)
-- No integration tests
-- No RPC simulation tests
-- Transaction analysis tests missing
+### ⚠️ Known Limitations
 
 **Missing Features**
 - Discord webhook notifications referenced but not fully implemented
-- No automated testing of detection patterns (P-101, P-102, P-103, P-104)
 
 **Recommendation**
-- ✅ **Devnet/Testnet**: Ready for use with basic security validation
+- ✅ **Devnet/Testnet**: Ready for use with comprehensive security validation
 - ⚠️ **Mainnet**: Use with caution - consider additional manual review for high-value transactions
 
 **File Reference**: [`src/guard/`](./src/guard/)
@@ -208,8 +220,10 @@ Before deploying to **mainnet**, ensure you:
 ### Module-Specific Checks
 
 **If using Guard:**
+- [ ] ✅ Comprehensive test coverage available (86 tests)
 - [ ] Test detection patterns on devnet transactions
 - [ ] Verify signer validation works for your use case
+- [ ] Review pattern detection coverage (P-101 to P-108 for Solana, EVM patterns)
 - [ ] Consider manual review for high-value transactions
 - [ ] Monitor for false positives
 
@@ -249,9 +263,10 @@ Found a bug or limitation not listed here?
 ## Roadmap for Improvements
 
 ### Phase 1 (Immediate - Next Sprint)
-- Add comprehensive test suites to Guard, Loom, Flow (target 70%+ coverage)
+- ✅ **COMPLETED**: Comprehensive test suite for Guard (86 tests)
 - Complete Flow's Raydium CPI implementation
 - Implement and test Privacy's ZK compression flows
+- Add comprehensive test suites to Loom, Flow (target 70%+ coverage)
 
 ### Phase 2 (Short-term - 2-3 Weeks)
 - Implement Loom's ShredStream gRPC connection
@@ -268,7 +283,16 @@ Found a bug or limitation not listed here?
 
 ## Version History
 
-### v0.3.0 (Current - Beta)
+### v0.3.1 (Current - Beta)
+- **Guard**: Added comprehensive test coverage (86 tests)
+  - Solana pattern detection (P-101 to P-108)
+  - EVM security pattern detection
+  - Unified transaction validation
+- Guard, Risk, Loom: Devnet/Testnet ready with limitations
+- Privacy: Experimental
+- Flow: Research phase
+
+### v0.3.0 (Previous - Beta)
 - Initial beta release
 - Guard, Risk, Loom: Devnet/Testnet ready with limitations
 - Privacy: Experimental
