@@ -1,0 +1,42 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Anchor
+.anchor/
+.DS_Store
+test-ledger/
+
+# Node
+node_modules/
+dist/
+*.log
+.env
+.env.local
+
+# Frontend
+frontend/dist/
+frontend/.vite/
+
+# IDLs
+target/idl/
+target/types/
+
+# Keys
+*.pem
+*.key
+!*.pub.key
+deploy/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

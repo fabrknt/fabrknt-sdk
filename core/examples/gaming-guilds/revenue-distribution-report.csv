@@ -1,0 +1,8 @@
+Timestamp,Recipient ID,Recipient Wallet,Amount,Token,Status,Transaction Hash,Gas Cost (SOL),Error,Memo
+2025-12-28T13:14:27.086Z,scholar-001,7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU,1250,USDC,success,payout-7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU-1766927667086,0.000005,,Scholar payment - Axie Infinity (25% of scholar pool)
+2025-12-28T13:14:27.086Z,scholar-002,9zYpKmPRJYCbZqvZXgUjA3YzFwCJcPqTvJdKxLkWmNbP,1000,USDC,success,payout-9zYpKmPRJYCbZqvZXgUjA3YzFwCJcPqTvJdKxLkWmNbP-1766927667086,0.000005,,Scholar payment - Thetan Arena (20% of scholar pool)
+2025-12-28T13:14:27.086Z,scholar-003,FkDm3qJWzPcNkH8AvTdLx2sKbVrM9zYpWtGhJsXuCvEn,1250,USDC,success,payout-FkDm3qJWzPcNkH8AvTdLx2sKbVrM9zYpWtGhJsXuCvEn-1766927667086,0.000005,,Scholar payment - Axie Infinity (25% of scholar pool)
+2025-12-28T13:14:27.086Z,scholar-004,HnBxRkPqTcVmJwYzKsLuDgFqEaNpXtMbWvCsGhJrUiOp,1500,USDC,success,payout-HnBxRkPqTcVmJwYzKsLuDgFqEaNpXtMbWvCsGhJrUiOp-1766927667086,0.000005,,Scholar payment - Star Atlas (30% of scholar pool)
+2025-12-28T13:14:27.086Z,manager-001,JpDyXmQsWvNcKzLhTgFuErBpAtMxYwVsGiHjRkOuCnBm,1200,USDC,success,payout-JpDyXmQsWvNcKzLhTgFuErBpAtMxYwVsGiHjRkOuCnBm-1766927667086,0.000005,,Manager payment - Guild Master (60% of manager pool)
+2025-12-28T13:14:27.086Z,manager-002,KqEzYnRtXwOdLaMjUhGvFsCqBuNyZxWtHkJsRlPvDoEn,800,USDC,success,payout-KqEzYnRtXwOdLaMjUhGvFsCqBuNyZxWtHkJsRlPvDoEn-1766927667086,0.000005,,Manager payment - Operations Manager (40% of manager pool)
+2025-12-28T13:14:27.086Z,treasury,LrFaZoSuYxPeLbNkViHwGtDrCvOzAyXuIlKtSmQwEpFo,3000,USDC,success,payout-LrFaZoSuYxPeLbNkViHwGtDrCvOzAyXuIlKtSmQwEpFo-1766927667086,0.000005,,Guild treasury allocation (30% of total revenue)

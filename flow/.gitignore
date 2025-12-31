@@ -1,0 +1,43 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Node
+node_modules/
+yarn.lock
+package-lock.json
+
+# Anchor
+.anchor/
+test-ledger/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+
+# Keypairs (keep deploy keypairs in version control for Anchor)
+# But ignore any other keypairs
+*.json
+!package.json
+!tsconfig.json
+!yarn.lock
+!Anchor.toml

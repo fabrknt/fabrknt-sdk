@@ -1,0 +1,87 @@
+{
+    "name": "@fabrknt/sdk",
+    "version": "0.3.1",
+    "description": "Open source SDK for building crypto financial operations on Solana. SDK primitives and patterns for developers. Each module can be used independently or together.",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "test": "vitest",
+        "test:coverage": "vitest --coverage",
+        "lint": "eslint . --ext .ts,.tsx",
+        "lint:fix": "eslint . --ext .ts,.tsx --fix",
+        "typecheck": "tsc --noEmit",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "solana",
+        "solana-sdk",
+        "sdk",
+        "defi",
+        "blockchain",
+        "typescript",
+        "crypto",
+        "crypto-payments",
+        "cryptocurrency",
+        "treasury",
+        "payroll",
+        "vesting",
+        "financial-operations",
+        "developer-tools",
+        "patterns",
+        "security",
+        "parallel-execution",
+        "gas-optimization",
+        "dex",
+        "jupiter",
+        "trading-bot",
+        "web3",
+        "solana-program",
+        "anchor",
+        "open-source"
+    ],
+    "author": "Psyto",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fabrknt/fabrknt"
+    },
+    "bugs": {
+        "url": "https://github.com/fabrknt/fabrknt/issues"
+    },
+    "homepage": "https://www.fabrknt.com",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.5",
+        "@typescript-eslint/eslint-plugin": "^6.19.0",
+        "@typescript-eslint/parser": "^6.19.0",
+        "@vitest/coverage-v8": "^1.2.0",
+        "eslint": "^8.56.0",
+        "tsup": "^8.0.1",
+        "typescript": "^5.3.3",
+        "vitest": "^1.2.0"
+    },
+    "dependencies": {
+        "@solana/web3.js": "^1.87.6",
+        "viem": "^2.21.54"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

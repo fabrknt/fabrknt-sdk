@@ -1,0 +1,24 @@
+{
+	"name": "@fabrknt/hello-world-example",
+	"version": "1.0.0",
+	"description": "Hello World example for Fabrknt SDK - your first payment in 5 minutes",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"start": "tsx index.ts",
+		"dev": "tsx watch index.ts"
+	},
+	"keywords": ["fabrknt", "solana", "example", "hello-world", "tutorial"],
+	"dependencies": {
+		"@solana/web3.js": "^1.87.6",
+		"@solana/spl-token": "^0.3.9",
+		"dotenv": "^16.3.1"
+	},
+	"devDependencies": {
+		"tsx": "^4.7.0",
+		"typescript": "^5.3.3"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}

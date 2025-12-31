@@ -1,0 +1,37 @@
+{
+    "name": "privacy",
+    "version": "0.1.0",
+    "description": "Privacy: Shielded State Middleware - Private Airdrop Proof of Concept",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "ts-node",
+        "example:airdrop": "ts-node src/examples/private-airdrop.ts",
+        "example:transfer": "ts-node src/examples/compressed-transfer.ts",
+        "test": "jest"
+    },
+    "keywords": [
+        "solana",
+        "zk-compression",
+        "light-protocol",
+        "privacy",
+        "airdrop"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "@coral-xyz/anchor": "^0.30.1",
+        "@lightprotocol/compressed-token": "^0.8.0",
+        "@lightprotocol/stateless.js": "^0.9.0",
+        "@solana/spl-token": "^0.4.14",
+        "@solana/web3.js": "^1.95.8",
+        "bs58": "^5.0.0",
+        "dotenv": "^16.4.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.3.0"
+    }
+}

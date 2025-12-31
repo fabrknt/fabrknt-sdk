@@ -1,0 +1,26 @@
+[package]
+name = "risk"
+version = "0.1.0"
+description = "Risk x402 Payment Rail Program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "risk"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+default = []
+
+[dependencies]
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+
+# Pin indexmap to version compatible with Solana's bundled Rust 1.79
+[dependencies.indexmap]
+version = "2.0"
+
