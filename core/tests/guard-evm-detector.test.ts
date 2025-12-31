@@ -60,7 +60,9 @@ describe("Guard EVM Detector - Reentrancy Detection", () => {
             );
             expect(reentrancyWarning).toBeDefined();
             expect(reentrancyWarning?.severity).toBe(Severity.Alert);
-            expect(reentrancyWarning?.message).toContain("multiple external calls");
+            expect(reentrancyWarning?.message).toContain(
+                "multiple external calls"
+            );
         });
 
         it("should detect value transfer with external call", () => {
@@ -484,7 +486,10 @@ describe("Guard EVM Detector - All Patterns", () => {
 
             const networkAvgPriorityFee = 10000000000n; // 10 gwei
 
-            const warnings = detectAllEVMPatterns(txData, networkAvgPriorityFee);
+            const warnings = detectAllEVMPatterns(
+                txData,
+                networkAvgPriorityFee
+            );
 
             const frontRunningWarning = warnings.find(
                 (w) => w.patternId === PatternId.FrontRunning
@@ -493,4 +498,3 @@ describe("Guard EVM Detector - All Patterns", () => {
         });
     });
 });
-

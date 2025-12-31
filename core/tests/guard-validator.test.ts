@@ -44,7 +44,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.isValid).toBe(false);
             expect(result.blockedBy).toContain(PatternId.MintKill);
@@ -70,7 +73,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.isValid).toBe(true);
             expect(result.blockedBy).toBeUndefined();
@@ -113,7 +119,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.warnings.length).toBeGreaterThan(0);
             const mintKillWarning = result.warnings.find(
@@ -139,7 +148,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.isValid).toBe(true);
             expect(result.warnings).toHaveLength(0);
@@ -168,7 +180,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.warnings.length).toBeGreaterThan(0);
             const reentrancyWarning = result.warnings.find(
@@ -198,7 +213,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.warnings.length).toBeGreaterThan(0);
             const flashLoanWarning = result.warnings.find(
@@ -229,7 +247,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.warnings.length).toBeGreaterThan(0);
             const frontRunningWarning = result.warnings.find(
@@ -259,7 +280,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.warnings.length).toBeGreaterThan(0);
             const unauthorizedWarning = result.warnings.find(
@@ -280,7 +304,9 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            vi.mocked(Pulsar.getBatchRiskMetrics).mockResolvedValue(mockRiskMetrics);
+            vi.mocked(Pulsar.getBatchRiskMetrics).mockResolvedValue(
+                mockRiskMetrics
+            );
 
             const config: GuardConfig = {
                 pulsar: {
@@ -302,7 +328,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(Pulsar.getBatchRiskMetrics).toHaveBeenCalledWith(
                 ["asset-1"],
@@ -331,7 +360,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(Pulsar.getBatchRiskMetrics).not.toHaveBeenCalled();
             expect(result.isValid).toBe(true);
@@ -363,7 +395,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
             };
 
             // Should not throw
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
             expect(result).toBeDefined();
         });
     });
@@ -390,7 +425,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             // Privacy validation should add warnings if requirements not met
             expect(result.warnings).toBeDefined();
@@ -416,7 +454,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.isValid).toBe(true);
         });
@@ -459,7 +500,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.isValid).toBe(false);
             expect(result.blockedBy).toBeDefined();
@@ -485,7 +529,10 @@ describe("Guard Validator - Unified Transaction Validation", () => {
                 },
             };
 
-            const result = await validateUnifiedTransactionWithPatterns(tx, config);
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
 
             expect(result.isValid).toBe(true);
         });
@@ -531,4 +578,3 @@ describe("Guard Validator - Legacy Transaction Validation", () => {
         });
     });
 });
-
