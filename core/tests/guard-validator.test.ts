@@ -295,14 +295,18 @@ describe("Guard Validator - Unified Transaction Validation", () => {
 
     describe("Risk Assessment (Pulsar Integration)", () => {
         it("should integrate with Pulsar for risk assessment", async () => {
-            const mockRiskMetrics = {
-                "asset-1": {
-                    overallRisk: 0.8,
-                    complianceScore: 0.6,
-                    counterpartyRisk: 0.7,
-                    oracleIntegrity: 0.9,
-                },
-            };
+            const mockRiskMetrics = new Map([
+                [
+                    "asset-1",
+                    {
+                        riskScore: 0.8,
+                        complianceScore: 0.6,
+                        complianceStatus: "compliant" as const,
+                        counterpartyRisk: 0.7,
+                        oracleIntegrity: 0.9,
+                    },
+                ],
+            ]);
 
             vi.mocked(Pulsar.getBatchRiskMetrics).mockResolvedValue(
                 mockRiskMetrics
@@ -575,6 +579,644 @@ describe("Guard Validator - Legacy Transaction Validation", () => {
 
             expect(result.isValid).toBe(false);
             expect(result.blockedBy).toContain(PatternId.MintKill);
+        });
+    });
+
+    describe("Custom Rules Validation", () => {
+        it("should validate custom rules when provided", async () => {
+            const customRule = {
+                name: "Test Rule",
+                enabled: true,
+                validate: vi.fn((tx: Transaction) => true),
+            };
+
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                customRules: [customRule],
+            };
+
+            const tx: Transaction = {
+                id: "test-tx",
+                status: "pending",
+                instructions: [],
+                signers: [],
+            };
+
+            const result = await validateTransaction(tx, config);
+
+            expect(customRule.validate).toHaveBeenCalledWith(tx);
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should add warning when custom rule fails", async () => {
+            const customRule = {
+                name: "Failing Rule",
+                enabled: true,
+                validate: vi.fn((tx: Transaction) => false),
+            };
+
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                customRules: [customRule],
+            };
+
+            const tx: Transaction = {
+                id: "test-tx",
+                status: "pending",
+                instructions: [],
+                signers: [],
+            };
+
+            const result = await validateTransaction(tx, config);
+
+            expect(customRule.validate).toHaveBeenCalledWith(tx);
+            expect(result.warnings.length).toBeGreaterThan(0);
+            const customWarning = result.warnings.find((w) =>
+                w.message.includes("Custom rule violation")
+            );
+            expect(customWarning).toBeDefined();
+            expect(customWarning?.message).toContain("Failing Rule");
+        });
+
+        it("should skip disabled custom rules", async () => {
+            const customRule = {
+                name: "Disabled Rule",
+                enabled: false,
+                validate: vi.fn((tx: Transaction) => false),
+            };
+
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                customRules: [customRule],
+            };
+
+            const tx: Transaction = {
+                id: "test-tx",
+                status: "pending",
+                instructions: [],
+                signers: [],
+            };
+
+            const result = await validateTransaction(tx, config);
+
+            expect(customRule.validate).not.toHaveBeenCalled();
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should handle custom rule validation errors gracefully", async () => {
+            const customRule = {
+                name: "Error Rule",
+                enabled: true,
+                validate: vi.fn((tx: Transaction) => {
+                    throw new Error("Rule validation error");
+                }),
+            };
+
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                customRules: [customRule],
+            };
+
+            const tx: Transaction = {
+                id: "test-tx",
+                status: "pending",
+                instructions: [],
+                signers: [],
+            };
+
+            // Should not throw
+            const result = await validateTransaction(tx, config);
+
+            expect(result).toBeDefined();
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should validate multiple custom rules", async () => {
+            const rule1 = {
+                name: "Rule 1",
+                enabled: true,
+                validate: vi.fn((tx: Transaction) => true),
+            };
+
+            const rule2 = {
+                name: "Rule 2",
+                enabled: true,
+                validate: vi.fn((tx: Transaction) => false),
+            };
+
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                customRules: [rule1, rule2],
+            };
+
+            const tx: Transaction = {
+                id: "test-tx",
+                status: "pending",
+                instructions: [],
+                signers: [],
+            };
+
+            const result = await validateTransaction(tx, config);
+
+            expect(rule1.validate).toHaveBeenCalled();
+            expect(rule2.validate).toHaveBeenCalled();
+            expect(result.warnings.length).toBeGreaterThan(0);
+        });
+    });
+
+    describe("Risk Tolerance and Blocking Logic", () => {
+        it("should block critical patterns in strict mode", async () => {
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                mode: "block",
+                riskTolerance: "strict",
+            };
+
+            // Create a mint kill transaction (critical)
+            const instructionData = Buffer.alloc(35);
+            instructionData[0] = 6; // SetAuthority
+            instructionData[1] = 0; // Mint authority
+            instructionData[2] = 0; // COption::None
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [
+                            {
+                                programId: TOKEN_PROGRAM_ID,
+                                keys: [
+                                    {
+                                        pubkey: "mint-account",
+                                        isSigner: false,
+                                        isWritable: true,
+                                    },
+                                ],
+                                data: instructionData.toString("base64"),
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.blockedBy).toBeDefined();
+            expect(result.blockedBy?.length).toBeGreaterThan(0);
+        });
+
+        it("should block critical patterns in moderate mode", async () => {
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                mode: "block",
+                riskTolerance: "moderate",
+            };
+
+            // Create a mint kill transaction (critical)
+            const instructionData = Buffer.alloc(35);
+            instructionData[0] = 6; // SetAuthority
+            instructionData[1] = 0; // Mint authority
+            instructionData[2] = 0; // COption::None
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [
+                            {
+                                programId: TOKEN_PROGRAM_ID,
+                                keys: [
+                                    {
+                                        pubkey: "mint-account",
+                                        isSigner: false,
+                                        isWritable: true,
+                                    },
+                                ],
+                                data: instructionData.toString("base64"),
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.blockedBy).toBeDefined();
+        });
+
+        it("should only block mint/freeze kills in permissive mode", async () => {
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                mode: "block",
+                riskTolerance: "permissive",
+            };
+
+            // Create a mint kill transaction (critical)
+            const instructionData = Buffer.alloc(35);
+            instructionData[0] = 6; // SetAuthority
+            instructionData[1] = 0; // Mint authority
+            instructionData[2] = 0; // COption::None
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [
+                            {
+                                programId: TOKEN_PROGRAM_ID,
+                                keys: [
+                                    {
+                                        pubkey: "mint-account",
+                                        isSigner: false,
+                                        isWritable: true,
+                                    },
+                                ],
+                                data: instructionData.toString("base64"),
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            // Should still block mint kill in permissive mode
+            expect(result.isValid).toBe(false);
+            expect(result.blockedBy).toBeDefined();
+        });
+
+        it("should not block in warn mode", async () => {
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+                mode: "warn",
+                riskTolerance: "strict",
+            };
+
+            // Create a mint kill transaction (critical)
+            const instructionData = Buffer.alloc(35);
+            instructionData[0] = 6; // SetAuthority
+            instructionData[1] = 0; // Mint authority
+            instructionData[2] = 0; // COption::None
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [
+                            {
+                                programId: TOKEN_PROGRAM_ID,
+                                keys: [
+                                    {
+                                        pubkey: "mint-account",
+                                        isSigner: false,
+                                        isWritable: true,
+                                    },
+                                ],
+                                data: instructionData.toString("base64"),
+                            },
+                        ],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            // In warn mode, should not block even critical patterns
+            expect(result.isValid).toBe(true);
+            expect(result.blockedBy).toBeUndefined();
+            expect(result.warnings.length).toBeGreaterThan(0);
+        });
+    });
+
+    describe("Pulsar Risk Assessment Edge Cases", () => {
+        it("should handle compliance check failures", async () => {
+            const mockRiskMetrics = new Map([
+                [
+                    "asset-1",
+                    {
+                        riskScore: 0.5,
+                        complianceScore: 0.6,
+                        complianceStatus: "non-compliant" as const,
+                        counterpartyRisk: 0.3,
+                        oracleIntegrity: 0.9,
+                    },
+                ],
+            ]);
+
+            vi.mocked(Pulsar.getBatchRiskMetrics).mockResolvedValue(
+                mockRiskMetrics
+            );
+
+            const config: GuardConfig = {
+                pulsar: {
+                    enabled: true,
+                    riskThreshold: 0.7,
+                    enableComplianceCheck: true,
+                },
+            };
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                assetAddresses: ["asset-1"],
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            expect(result.warnings.length).toBeGreaterThan(0);
+            const complianceWarning = result.warnings.find((w) =>
+                w.message.includes("Non-compliant asset")
+            );
+            expect(complianceWarning).toBeDefined();
+            expect(complianceWarning?.severity).toBe(Severity.Critical);
+        });
+
+        it("should handle counterparty risk checks", async () => {
+            const mockRiskMetrics = new Map([
+                [
+                    "asset-1",
+                    {
+                        riskScore: 0.5,
+                        complianceScore: 0.8,
+                        complianceStatus: "compliant" as const,
+                        counterpartyRisk: 0.85,
+                        oracleIntegrity: 0.9,
+                    },
+                ],
+            ]);
+
+            vi.mocked(Pulsar.getBatchRiskMetrics).mockResolvedValue(
+                mockRiskMetrics
+            );
+
+            const config: GuardConfig = {
+                pulsar: {
+                    enabled: true,
+                    riskThreshold: 0.7,
+                    enableCounterpartyCheck: true,
+                },
+            };
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                assetAddresses: ["asset-1"],
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            expect(result.warnings.length).toBeGreaterThan(0);
+            const counterpartyWarning = result.warnings.find((w) =>
+                w.message.includes("High counterparty risk")
+            );
+            expect(counterpartyWarning).toBeDefined();
+        });
+
+        it("should handle oracle integrity checks", async () => {
+            const mockRiskMetrics = new Map([
+                [
+                    "asset-1",
+                    {
+                        riskScore: 0.5,
+                        complianceScore: 0.8,
+                        complianceStatus: "compliant" as const,
+                        counterpartyRisk: 0.3,
+                        oracleIntegrity: 0.5, // Low integrity
+                    },
+                ],
+            ]);
+
+            vi.mocked(Pulsar.getBatchRiskMetrics).mockResolvedValue(
+                mockRiskMetrics
+            );
+
+            const config: GuardConfig = {
+                pulsar: {
+                    enabled: true,
+                    riskThreshold: 0.7,
+                    enableOracleCheck: true,
+                },
+            };
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                assetAddresses: ["asset-1"],
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            expect(result.warnings.length).toBeGreaterThan(0);
+            const oracleWarning = result.warnings.find((w) =>
+                w.message.includes("Low oracle integrity")
+            );
+            expect(oracleWarning).toBeDefined();
+            expect(oracleWarning?.severity).toBe(Severity.Alert);
+        });
+
+        it("should handle fallback on error when enabled", async () => {
+            vi.mocked(Pulsar.getBatchRiskMetrics).mockRejectedValue(
+                new Error("Pulsar API error")
+            );
+
+            const config: GuardConfig = {
+                pulsar: {
+                    enabled: true,
+                    riskThreshold: 0.7,
+                    fallbackOnError: true,
+                },
+            };
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                assetAddresses: ["asset-1"],
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            // Should not add error warning when fallback is enabled
+            expect(result).toBeDefined();
+            const errorWarning = result.warnings.find((w) =>
+                w.message.includes("Risk assessment failed")
+            );
+            expect(errorWarning).toBeUndefined();
+        });
+
+        it("should add error warning when fallback is disabled", async () => {
+            vi.mocked(Pulsar.getBatchRiskMetrics).mockRejectedValue(
+                new Error("Pulsar API error")
+            );
+
+            const config: GuardConfig = {
+                pulsar: {
+                    enabled: true,
+                    riskThreshold: 0.7,
+                    fallbackOnError: false,
+                },
+            };
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                assetAddresses: ["asset-1"],
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            // Should add error warning when fallback is disabled
+            expect(result.warnings.length).toBeGreaterThan(0);
+            const errorWarning = result.warnings.find((w) =>
+                w.message.includes("Risk assessment failed")
+            );
+            expect(errorWarning).toBeDefined();
+        });
+    });
+
+    describe("Privacy Validation Edge Cases", () => {
+        it("should warn when privacy required but compression not enabled", async () => {
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+            };
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                privacyMetadata: {
+                    requiresPrivacy: true,
+                    compressionEnabled: false,
+                },
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            expect(result.warnings.length).toBeGreaterThan(0);
+            const privacyWarning = result.warnings.find((w) =>
+                w.message.includes(
+                    "Privacy requested but compression not enabled"
+                )
+            );
+            expect(privacyWarning).toBeDefined();
+        });
+
+        it("should not warn when privacy and compression are both enabled", async () => {
+            const config: GuardConfig = {
+                enablePatternDetection: true,
+            };
+
+            const tx: UnifiedTransaction = {
+                id: "test-tx",
+                chain: "solana",
+                status: "pending",
+                privacyMetadata: {
+                    requiresPrivacy: true,
+                    compressionEnabled: true,
+                },
+                chainData: {
+                    type: "solana",
+                    data: {
+                        instructions: [],
+                    },
+                },
+            };
+
+            const result = await validateUnifiedTransactionWithPatterns(
+                tx,
+                config
+            );
+
+            const privacyWarning = result.warnings.find((w) =>
+                w.message.includes(
+                    "Privacy requested but compression not enabled"
+                )
+            );
+            expect(privacyWarning).toBeUndefined();
         });
     });
 });
