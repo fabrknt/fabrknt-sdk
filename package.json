@@ -1,0 +1,40 @@
+{
+  "name": "fabrknt-suite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fabrknt Suite: PULSE + TRACE + FABRIC - Web3 project lifecycle management",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "pulse:dev": "pnpm --filter @fabrknt/pulse dev",
+    "trace:dev": "pnpm --filter @fabrknt/trace dev",
+    "fabric:dev": "pnpm --filter @fabrknt/fabric dev",
+    "db:generate": "pnpm --filter @fabrknt/db db:generate",
+    "db:push": "pnpm --filter @fabrknt/db db:push",
+    "db:migrate": "pnpm --filter @fabrknt/db db:migrate",
+    "db:studio": "pnpm --filter @fabrknt/db db:studio",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "setup": "pnpm install && pnpm db:generate && pnpm docker:up",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "check": "turbo run lint type-check"
+  },
+  "devDependencies": {
+    "turbo": "^1.11.2",
+    "typescript": "^5.3.3",
+    "prettier": "^3.1.1",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
