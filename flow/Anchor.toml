@@ -6,7 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-flow = "BxRYbJ8XfBdRrk88st1JyeF95XAgPZhCzuVhX3GdXrb8"
+flow = "5FBd3aTWH5b62DgFoAWjnnogzCptKf952ZUvgEnmzsRk"
+
+[programs.devnet]
+flow = "5FBd3aTWH5b62DgFoAWjnnogzCptKf952ZUvgEnmzsRk"
 
 [registry]
 url = "https://api.apr.dev"

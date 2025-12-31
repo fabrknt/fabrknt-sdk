@@ -1,6 +1,6 @@
 # Known Limitations
 
-**Last Updated**: January 1, 2025
+**Last Updated**: January 31, 2025
 **SDK Version**: v0.3.1 (Beta)
 
 This document provides transparency about the current limitations and development status of each Fabrknt module. We believe in clear communication about what works, what's in progress, and what requires caution.
@@ -13,13 +13,13 @@ Fabrknt is actively developed and tested primarily on **devnet and testnet**. In
 
 ## Module Status Summary
 
-| Module      | Devnet     | Testnet    | Mainnet             | Primary Limitation               |
-| ----------- | ---------- | ---------- | ------------------- | -------------------------------- |
-| **Guard**   | ✅ Ready   | ✅ Ready   | ⚠️ Use with Caution | Discord webhooks incomplete      |
-| **Risk**    | ✅ Ready   | ✅ Ready   | ⚠️ MVP Only         | Oracle integrations incomplete   |
-| **Loom**    | ✅ Ready   | ✅ Ready   | ⚠️ Partial          | ShredStream gRPC not implemented |
-| **Privacy** | ⚠️ Testing | ⚠️ Testing | ❌ Not Ready        | Phase 2 needs validation         |
-| **Flow**    | ❌ Blocked | ❌ Blocked | ❌ Not Ready        | Raydium CLMM not integrated      |
+| Module      | Devnet     | Testnet    | Mainnet             | Primary Limitation                   |
+| ----------- | ---------- | ---------- | ------------------- | ------------------------------------ |
+| **Guard**   | ✅ Ready   | ✅ Ready   | ⚠️ Use with Caution | Discord webhooks incomplete          |
+| **Risk**    | ✅ Ready   | ✅ Ready   | ⚠️ MVP Only         | Oracle integrations incomplete       |
+| **Loom**    | ✅ Ready   | ✅ Ready   | ⚠️ Partial          | ShredStream gRPC not implemented     |
+| **Privacy** | ⚠️ Testing | ⚠️ Testing | ❌ Not Ready        | Phase 2 needs validation             |
+| **Flow**    | ⚠️ Testing | ⚠️ Testing | ❌ Not Ready        | Needs real pool testing & validation |
 
 ---
 
@@ -213,35 +213,41 @@ Fabrknt is actively developed and tested primarily on **devnet and testnet**. In
 -   Slippage calculations
 -   Audit logging framework
 -   Authority validation
+-   **Raydium CLMM CPI Integration** - All 4 core CPI calls implemented:
+    1. ✅ `OpenPosition` - Create new concentrated liquidity positions
+    2. ✅ `IncreaseLiquidity` - Add liquidity to existing positions
+    3. ✅ `DecreaseLiquidity` - Remove liquidity from positions
+    4. ✅ `Collect` - Collect fees from positions
+-   PDA derivation helpers for Raydium positions and tick arrays
+-   Instruction discriminators verified (8-byte Anchor format)
+-   Program deployed to devnet (Program ID: `5FBd3aTWH5b62DgFoAWjnnogzCptKf952ZUvgEnmzsRk`)
 
 ### ⚠️ Known Limitations
 
-**Critical Blockers** (4 unimplemented CPI calls)
+**Testing & Validation**
 
-1. **Raydium OpenPosition**: Line 1169 - TODO: Implement actual CPI call
-2. **Raydium IncreaseLiquidity**: Line 1200 - TODO: Implement CPI
-3. **Raydium DecreaseLiquidity**: Line 1223 - TODO: Implement CPI
-4. **Raydium Collect**: Line 1244 - TODO: Implement CPI
-
-**Implementation Status**
-
--   All Raydium CLMM functions are stubs (placeholders)
--   Instruction discriminators are placeholders
--   Account derivation not implemented for Raydium
--   No actual CPI invocations
--   Status documented as "Foundation Implemented - Research Phase"
+-   Needs testing with real Raydium CLMM pools on devnet
+-   PDA derivation formulas should be cross-referenced with Raydium's official implementation
+-   Account ordering and structure should be verified against Raydium SDK
+-   Integration tests with actual Raydium pools pending
 
 **Test Coverage**
 
--   Only ~7.5% code coverage (150 lines of tests / 2000+ lines of code)
--   Basic happy-path tests only
--   Missing: rebalancing tests, fee collection tests, error cases
+-   Test suite updated to handle optional Raydium accounts
+-   Tests handle rate limit errors gracefully
+-   Integration tests with real Raydium pools needed for full validation
+
+**Dependencies**
+
+-   `raydium-clmm-cpi` crate commented out due to version compatibility issues
+-   Currently using manual CPI instruction building
+-   May need to revisit dependency when compatible versions available
 
 **Recommendation**
 
--   ❌ **Devnet**: Blocked - core functionality not implemented
--   ❌ **Testnet**: Blocked
--   ❌ **Mainnet**: Not ready - requires Raydium instruction format research and CPI implementation
+-   ⚠️ **Devnet**: Ready for testing - CPI calls implemented, needs validation with real pools
+-   ⚠️ **Testnet**: Ready for testing - CPI calls implemented, needs validation with real pools
+-   ❌ **Mainnet**: Not ready - requires thorough testing with real Raydium pools and validation of PDA derivation
 
 **File Reference**: [`src/flow/`](./src/flow/), [`docs/RAYDIUM_INTEGRATION_STATUS.md`](./docs/RAYDIUM_INTEGRATION_STATUS.md)
 
@@ -295,8 +301,12 @@ Before deploying to **mainnet**, ensure you:
 
 **If using Flow:**
 
--   [ ] ❌ **Do NOT use** - core functionality not implemented
--   [ ] Wait for Raydium CLMM integration completion
+-   [ ] ⚠️ **Testing Phase** - Raydium CLMM CPI calls implemented
+-   [ ] Test with real Raydium CLMM pools on devnet first
+-   [ ] Verify PDA derivation matches Raydium's implementation
+-   [ ] Validate account structures and ordering
+-   [ ] Test all 4 CPI operations (OpenPosition, IncreaseLiquidity, DecreaseLiquidity, Collect)
+-   [ ] ❌ **Do NOT use on mainnet** - needs thorough testing and validation
 
 ---
 
@@ -316,9 +326,10 @@ Found a bug or limitation not listed here?
 
 -   ✅ **COMPLETED**: Comprehensive test suite for Guard (86 tests)
 -   ✅ **COMPLETED**: Comprehensive test suite for Privacy (51 tests)
--   Complete Flow's Raydium CPI implementation
+-   ✅ **COMPLETED**: Flow's Raydium CLMM CPI implementation (all 4 core CPI calls)
 -   Add integration tests for Privacy with real Light Protocol
--   Add comprehensive test suites to Loom, Flow (target 70%+ coverage)
+-   Add integration tests for Flow with real Raydium CLMM pools
+-   Add comprehensive test suites to Loom (target 70%+ coverage)
 
 ### Phase 2 (Short-term - 2-3 Weeks)
 
@@ -347,9 +358,15 @@ Found a bug or limitation not listed here?
     -   FabricCore privacy integration (26 tests)
     -   Privacy module functions with mocked Light Protocol (25 tests)
     -   ZK compression workflows, cost estimation, Guard integration
+-   **Flow**: Raydium CLMM CPI integration completed
+    -   All 4 core CPI calls implemented (OpenPosition, IncreaseLiquidity, DecreaseLiquidity, Collect)
+    -   PDA derivation helpers implemented
+    -   Instruction discriminators verified
+    -   Program deployed to devnet
+    -   Ready for testing with real Raydium pools
 -   Guard, Risk, Loom: Devnet/Testnet ready with limitations
 -   Privacy: Testing in progress (automated tests available)
--   Flow: Research phase
+-   Flow: Testing phase - CPI calls implemented, needs validation with real pools
 
 ### v0.3.0 (Previous - Beta)
 

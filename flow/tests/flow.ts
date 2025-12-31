@@ -41,6 +41,69 @@ describe("flow", () => {
     const pool = Keypair.generate().publicKey;
     const auditLog = Keypair.generate().publicKey;
 
+    // Helper function to get base accounts for createLiquidityPosition with optional Raydium accounts set to null
+    const getBasePositionAccounts = () => ({
+        position: liquidityPosition,
+        config: protocolConfig,
+        owner: owner.publicKey,
+        tokenAVault: tokenAVault,
+        tokenBVault: tokenBVault,
+        pool: pool,
+        auditLog: auditLog,
+        raydiumProgram: null,
+        raydiumPoolState: null,
+        raydiumPersonalPosition: null,
+        raydiumTickArrayLower: null,
+        raydiumTickArrayUpper: null,
+        raydiumTokenAccount0: null,
+        raydiumTokenAccount1: null,
+        raydiumTokenVault0: null,
+        raydiumTokenVault1: null,
+        tokenProgram: null,
+        systemProgram: SystemProgram.programId,
+    });
+
+    // Helper function to get base accounts for executeRebalance with optional accounts set to null
+    const getBaseRebalanceAccounts = (decisionPda: PublicKey) => ({
+        decision: decisionPda,
+        position: liquidityPosition,
+        config: protocolConfig,
+        approver: null,
+        auditLog: auditLog,
+        tokenProgram: null,
+        jupiterProgram: null,
+        sourceTokenAccount: null,
+        destinationTokenAccount: null,
+        programAuthority: null,
+        userTransferAuthority: null,
+        raydiumProgram: null,
+        raydiumPosition: null,
+        raydiumPoolState: null,
+        raydiumTickArrayLower: null,
+        raydiumTickArrayUpper: null,
+        raydiumTokenAccount0: null,
+        raydiumTokenAccount1: null,
+        raydiumTokenVault0: null,
+        raydiumTokenVault1: null,
+        raydiumTokenProgram: null,
+    });
+
+    // Helper function to get base accounts for collectFees with optional Raydium accounts set to null
+    const getBaseCollectFeesAccounts = () => ({
+        position: liquidityPosition,
+        config: protocolConfig,
+        owner: owner.publicKey,
+        auditLog: auditLog,
+        raydiumProgram: null,
+        raydiumPosition: null,
+        raydiumPoolState: null,
+        raydiumTokenAccount0: null,
+        raydiumTokenAccount1: null,
+        raydiumTokenVault0: null,
+        raydiumTokenVault1: null,
+        raydiumTokenProgram: null,
+    });
+
     before(async () => {
         // Generate keypairs for test accounts
         authority = Keypair.generate();
@@ -51,28 +114,60 @@ describe("flow", () => {
         facilitator = Keypair.generate();
         payerWallet = Keypair.generate();
 
-        // Airdrop SOL to test accounts
-        // Airdrop SOL to test accounts
-        const airdropTx1 = await provider.connection.requestAirdrop(
+        // Airdrop SOL to test accounts (only if they don't have enough balance)
+        const minBalance = 1 * anchor.web3.LAMPORTS_PER_SOL; // 1 SOL minimum
+
+        const checkAndAirdrop = async (pubkey: PublicKey, amount: number) => {
+            try {
+                const balance = await provider.connection.getBalance(pubkey);
+                if (balance < minBalance) {
+                    console.log(
+                        `Airdropping ${
+                            amount / anchor.web3.LAMPORTS_PER_SOL
+                        } SOL to ${pubkey.toString()}`
+                    );
+                    const tx = await provider.connection.requestAirdrop(
+                        pubkey,
+                        amount
+                    );
+                    await provider.connection.confirmTransaction(tx);
+                } else {
+                    console.log(
+                        `Account ${pubkey.toString()} already has ${
+                            balance / anchor.web3.LAMPORTS_PER_SOL
+                        } SOL, skipping airdrop`
+                    );
+                }
+            } catch (err: any) {
+                if (
+                    err.message?.includes("429") ||
+                    err.message?.includes("rate limit")
+                ) {
+                    console.warn(
+                        `Rate limit hit for ${pubkey.toString()}, account may need manual funding`
+                    );
+                } else {
+                    throw err;
+                }
+            }
+        };
+
+        await checkAndAirdrop(
             authority.publicKey,
             2 * anchor.web3.LAMPORTS_PER_SOL
         );
-        await provider.connection.confirmTransaction(airdropTx1);
-        const airdropTx2 = await provider.connection.requestAirdrop(
+        await checkAndAirdrop(
             owner.publicKey,
             2 * anchor.web3.LAMPORTS_PER_SOL
         );
-        await provider.connection.confirmTransaction(airdropTx2);
-        const airdropTx3 = await provider.connection.requestAirdrop(
+        await checkAndAirdrop(
             payer.publicKey,
             2 * anchor.web3.LAMPORTS_PER_SOL
         );
-        await provider.connection.confirmTransaction(airdropTx3);
-        const airdropTx4 = await provider.connection.requestAirdrop(
+        await checkAndAirdrop(
             approver.publicKey,
             2 * anchor.web3.LAMPORTS_PER_SOL
         );
-        await provider.connection.confirmTransaction(airdropTx4);
 
         // Derive PDAs
         [protocolConfig, protocolConfigBump] = PublicKey.findProgramAddressSync(
@@ -205,16 +300,7 @@ describe("flow", () => {
                     maxPositionSize,
                     maxSingleTrade
                 )
-                .accounts({
-                    position: liquidityPosition,
-                    config: protocolConfig,
-                    owner: owner.publicKey,
-                    tokenAVault: tokenAVault,
-                    tokenBVault: tokenBVault,
-                    pool: pool,
-                    auditLog: auditLog,
-                    systemProgram: SystemProgram.programId,
-                })
+                .accounts(getBasePositionAccounts())
                 .signers([owner])
                 .rpc();
 
@@ -255,16 +341,7 @@ describe("flow", () => {
                         new BN("100000000000"),
                         new BN("10000000000")
                     )
-                    .accounts({
-                        position: liquidityPosition,
-                        config: protocolConfig,
-                        owner: owner.publicKey,
-                        tokenAVault: tokenAVault,
-                        tokenBVault: tokenBVault,
-                        pool: pool,
-                        auditLog: auditLog,
-                        systemProgram: SystemProgram.programId,
-                    })
+                    .accounts(getBasePositionAccounts())
                     .signers([owner])
                     .rpc();
                 expect.fail("Should have failed");
@@ -291,16 +368,7 @@ describe("flow", () => {
                         maxPositionSize,
                         new BN("10000000000")
                     )
-                    .accounts({
-                        position: liquidityPosition,
-                        config: protocolConfig,
-                        owner: owner.publicKey,
-                        tokenAVault: tokenAVault,
-                        tokenBVault: tokenBVault,
-                        pool: pool,
-                        auditLog: auditLog,
-                        systemProgram: SystemProgram.programId,
-                    })
+                    .accounts(getBasePositionAccounts())
                     .signers([owner])
                     .rpc();
 
@@ -402,19 +470,7 @@ describe("flow", () => {
             // 2. Execute decision (updates last_rebalance_timestamp)
             await program.methods
                 .executeRebalance(positionIndex, decisionIndex, 50, null, null)
-                .accounts({
-                    decision: decisionPda,
-                    position: liquidityPosition,
-                    config: protocolConfig,
-                    approver: null,
-                    auditLog: auditLog,
-                    tokenProgram: null,
-                    jupiterProgram: null,
-                    sourceTokenAccount: null,
-                    destinationTokenAccount: null,
-                    programAuthority: null,
-                    userTransferAuthority: null,
-                })
+                .accounts(getBaseRebalanceAccounts(decisionPda))
                 .rpc();
 
             // 3. Try to create another decision immediately (should fail)
@@ -481,16 +537,7 @@ describe("flow", () => {
                     new BN("100000000000"),
                     new BN("10000000000")
                 )
-                .accounts({
-                    position: liquidityPosition,
-                    config: protocolConfig,
-                    owner: owner.publicKey,
-                    tokenAVault: tokenAVault,
-                    tokenBVault: tokenBVault,
-                    pool: pool,
-                    auditLog: auditLog,
-                    systemProgram: SystemProgram.programId,
-                })
+                .accounts(getBasePositionAccounts())
                 .signers([owner])
                 .rpc();
 
@@ -567,19 +614,7 @@ describe("flow", () => {
                     null,
                     null
                 )
-                .accounts({
-                    decision: decisionPda,
-                    position: liquidityPosition, // Anchor derives decision PDA from position + decisionIndex
-                    config: protocolConfig,
-                    approver: null, // No approval needed for low-risk decision
-                    auditLog: auditLog,
-                    tokenProgram: null,
-                    jupiterProgram: null,
-                    sourceTokenAccount: null,
-                    destinationTokenAccount: null,
-                    programAuthority: null,
-                    userTransferAuthority: null,
-                })
+                .accounts(getBaseRebalanceAccounts(decisionPda))
                 .rpc();
 
             console.log("Execute rebalance tx:", tx);
@@ -606,19 +641,7 @@ describe("flow", () => {
             // First, execute successfully
             await program.methods
                 .executeRebalance(positionIndex, decisionIndex, 50, null, null)
-                .accounts({
-                    decision: null, // Anchor derives
-                    position: liquidityPosition,
-                    config: protocolConfig,
-                    approver: null,
-                    auditLog: auditLog,
-                    tokenProgram: null,
-                    jupiterProgram: null,
-                    sourceTokenAccount: null,
-                    destinationTokenAccount: null,
-                    programAuthority: null,
-                    userTransferAuthority: null,
-                })
+                .accounts(getBaseRebalanceAccounts(decisionPda))
                 .rpc();
 
             // Try to execute again (should fail because already executed)
@@ -631,17 +654,7 @@ describe("flow", () => {
                         null,
                         null
                     )
-                    .accounts({
-                        position: liquidityPosition,
-                        approver: null,
-                        auditLog: auditLog,
-                        tokenProgram: null,
-                        jupiterProgram: null,
-                        sourceTokenAccount: null,
-                        destinationTokenAccount: null,
-                        programAuthority: null,
-                        userTransferAuthority: null,
-                    })
+                    .accounts(getBaseRebalanceAccounts(decisionPda))
                     .rpc();
                 expect.fail("Should have failed");
             } catch (err) {
@@ -727,7 +740,9 @@ describe("flow", () => {
                         null
                     ) // 200% slippage (way too high)
                     .accounts({
+                        decision: null, // Will be derived
                         position: slippagePosition,
+                        config: protocolConfig,
                         approver: null,
                         auditLog: auditLog,
                         tokenProgram: null,
@@ -736,6 +751,16 @@ describe("flow", () => {
                         destinationTokenAccount: null,
                         programAuthority: null,
                         userTransferAuthority: null,
+                        raydiumProgram: null,
+                        raydiumPosition: null,
+                        raydiumPoolState: null,
+                        raydiumTickArrayLower: null,
+                        raydiumTickArrayUpper: null,
+                        raydiumTokenAccount0: null,
+                        raydiumTokenAccount1: null,
+                        raydiumTokenVault0: null,
+                        raydiumTokenVault1: null,
+                        raydiumTokenProgram: null,
                     })
                     .rpc();
                 expect.fail("Should have failed");
@@ -863,12 +888,7 @@ describe("flow", () => {
             try {
                 const tx = await program.methods
                     .collectFees(positionIndex)
-                    .accounts({
-                        position: liquidityPosition,
-                        config: protocolConfig,
-                        owner: owner.publicKey,
-                        auditLog: auditLog,
-                    })
+                    .accounts(getBaseCollectFeesAccounts())
                     .signers([owner])
                     .rpc();
 
@@ -913,14 +933,7 @@ describe("flow", () => {
                     new BN("100000000000"),
                     new BN("10000000000")
                 )
-                .accounts({
-                    owner: owner.publicKey,
-                    tokenAVault: tokenAVault,
-                    tokenBVault: tokenBVault,
-                    pool: pool,
-                    auditLog: auditLog,
-                    systemProgram: SystemProgram.programId,
-                })
+                .accounts(getBasePositionAccounts())
                 .signers([owner])
                 .rpc();
 
@@ -932,8 +945,17 @@ describe("flow", () => {
                     .collectFees(newPositionIndex)
                     .accounts({
                         position: newPositionPda, // Provide PDA explicitly
+                        config: protocolConfig,
                         owner: owner.publicKey,
                         auditLog: auditLog,
+                        raydiumProgram: null,
+                        raydiumPosition: null,
+                        raydiumPoolState: null,
+                        raydiumTokenAccount0: null,
+                        raydiumTokenAccount1: null,
+                        raydiumTokenVault0: null,
+                        raydiumTokenVault1: null,
+                        raydiumTokenProgram: null,
                     })
                     .signers([owner])
                     .rpc();
@@ -981,6 +1003,16 @@ describe("flow", () => {
                     tokenBVault: tokenBVault,
                     pool: pool,
                     auditLog: auditLog,
+                    raydiumProgram: null,
+                    raydiumPoolState: null,
+                    raydiumPersonalPosition: null,
+                    raydiumTickArrayLower: null,
+                    raydiumTickArrayUpper: null,
+                    raydiumTokenAccount0: null,
+                    raydiumTokenAccount1: null,
+                    raydiumTokenVault0: null,
+                    raydiumTokenVault1: null,
+                    tokenProgram: null,
                     systemProgram: SystemProgram.programId,
                 })
                 .signers([owner])
@@ -1160,6 +1192,16 @@ describe("flow", () => {
                     tokenBVault: tokenBVault,
                     pool: pool,
                     auditLog: auditLog,
+                    raydiumProgram: null,
+                    raydiumPoolState: null,
+                    raydiumPersonalPosition: null,
+                    raydiumTickArrayLower: null,
+                    raydiumTickArrayUpper: null,
+                    raydiumTokenAccount0: null,
+                    raydiumTokenAccount1: null,
+                    raydiumTokenVault0: null,
+                    raydiumTokenVault1: null,
+                    tokenProgram: null,
                     systemProgram: SystemProgram.programId,
                 })
                 .signers([integrationOwner])
@@ -1223,7 +1265,9 @@ describe("flow", () => {
                     null
                 )
                 .accounts({
+                    decision: null, // Will be derived
                     position: integrationPosition,
+                    config: protocolConfig,
                     approver: null,
                     auditLog: auditLog,
                     tokenProgram: null,
@@ -1232,6 +1276,16 @@ describe("flow", () => {
                     destinationTokenAccount: null,
                     programAuthority: null,
                     userTransferAuthority: null,
+                    raydiumProgram: null,
+                    raydiumPosition: null,
+                    raydiumPoolState: null,
+                    raydiumTickArrayLower: null,
+                    raydiumTickArrayUpper: null,
+                    raydiumTokenAccount0: null,
+                    raydiumTokenAccount1: null,
+                    raydiumTokenVault0: null,
+                    raydiumTokenVault1: null,
+                    raydiumTokenProgram: null,
                 })
                 .rpc();
 

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
 use anchor_lang::solana_program::program::invoke;
 
-declare_id!("BxRYbJ8XfBdRrk88st1JyeF95XAgPZhCzuVhX3GdXrb8");
+declare_id!("5FBd3aTWH5b62DgFoAWjnnogzCptKf952ZUvgEnmzsRk");
 
 // ============================================================================
 // JUPITER INTEGRATION CONSTANTS

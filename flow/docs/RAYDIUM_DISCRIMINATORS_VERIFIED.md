@@ -6,33 +6,38 @@
 ## Discriminator Format
 
 Raydium CLMM uses **Anchor framework** discriminators, which are calculated as:
-- First 8 bytes of `SHA256("global:instruction_name")`
+
+-   First 8 bytes of `SHA256("global:instruction_name")`
 
 ## Verified Discriminators
 
 ### 1. OpenPosition
-- **Instruction Name**: `open_position`
-- **Discriminator**: `[0x87, 0x80, 0x2f, 0x4d, 0x0f, 0x98, 0xf0, 0x31]`
-- **Calculation**: `SHA256("global:open_position")[0:8]`
-- **Constant**: `RAYDIUM_OPEN_POSITION_DISCRIMINATOR`
+
+-   **Instruction Name**: `open_position`
+-   **Discriminator**: `[0x87, 0x80, 0x2f, 0x4d, 0x0f, 0x98, 0xf0, 0x31]`
+-   **Calculation**: `SHA256("global:open_position")[0:8]`
+-   **Constant**: `RAYDIUM_OPEN_POSITION_DISCRIMINATOR`
 
 ### 2. IncreaseLiquidity
-- **Instruction Name**: `increase_liquidity`
-- **Discriminator**: `[0x2e, 0x9c, 0xf3, 0x76, 0x0d, 0xcd, 0xfb, 0xb2]`
-- **Calculation**: `SHA256("global:increase_liquidity")[0:8]`
-- **Constant**: `RAYDIUM_INCREASE_LIQUIDITY_DISCRIMINATOR`
+
+-   **Instruction Name**: `increase_liquidity`
+-   **Discriminator**: `[0x2e, 0x9c, 0xf3, 0x76, 0x0d, 0xcd, 0xfb, 0xb2]`
+-   **Calculation**: `SHA256("global:increase_liquidity")[0:8]`
+-   **Constant**: `RAYDIUM_INCREASE_LIQUIDITY_DISCRIMINATOR`
 
 ### 3. DecreaseLiquidity
-- **Instruction Name**: `decrease_liquidity`
-- **Discriminator**: `[0xa0, 0x26, 0xd0, 0x6f, 0x68, 0x5b, 0x2c, 0x01]`
-- **Calculation**: `SHA256("global:decrease_liquidity")[0:8]`
-- **Constant**: `RAYDIUM_DECREASE_LIQUIDITY_DISCRIMINATOR`
+
+-   **Instruction Name**: `decrease_liquidity`
+-   **Discriminator**: `[0xa0, 0x26, 0xd0, 0x6f, 0x68, 0x5b, 0x2c, 0x01]`
+-   **Calculation**: `SHA256("global:decrease_liquidity")[0:8]`
+-   **Constant**: `RAYDIUM_DECREASE_LIQUIDITY_DISCRIMINATOR`
 
 ### 4. Collect
-- **Instruction Name**: `collect`
-- **Discriminator**: `[0xd0, 0x2f, 0xc2, 0x9b, 0x11, 0x62, 0x52, 0xec]`
-- **Calculation**: `SHA256("global:collect")[0:8]`
-- **Constant**: `RAYDIUM_COLLECT_DISCRIMINATOR`
+
+-   **Instruction Name**: `collect`
+-   **Discriminator**: `[0xd0, 0x2f, 0xc2, 0x9b, 0x11, 0x62, 0x52, 0xec]`
+-   **Calculation**: `SHA256("global:collect")[0:8]`
+-   **Constant**: `RAYDIUM_COLLECT_DISCRIMINATOR`
 
 ## Verification Method
 
@@ -73,10 +78,10 @@ const RAYDIUM_COLLECT_DISCRIMINATOR: [u8; 8] = [0xd0, 0x2f, 0xc2, 0x9b, 0x11, 0x
 
 ## Verification Status
 
-- ✅ Discriminators calculated using Anchor standard formula
-- ✅ All 4 CPI functions updated with correct discriminators
-- ✅ Code compiles successfully
-- ⚠️ **Note**: Final verification requires testing on devnet with actual Raydium CLMM program
+-   ✅ Discriminators calculated using Anchor standard formula
+-   ✅ All 4 CPI functions updated with correct discriminators
+-   ✅ Code compiles successfully
+-   ⚠️ **Note**: Final verification requires testing on devnet with actual Raydium CLMM program
 
 ## Next Steps
 
@@ -88,4 +93,3 @@ const RAYDIUM_COLLECT_DISCRIMINATOR: [u8; 8] = [0xd0, 0x2f, 0xc2, 0x9b, 0x11, 0x
 
 **Status**: Verified (Pending Devnet Testing)  
 **Last Updated**: January 2025
-

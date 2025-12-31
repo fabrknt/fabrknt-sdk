@@ -53,20 +53,65 @@ describe("Jupiter CPI Integration", () => {
         payer = Keypair.generate();
         userTransferAuthority = Keypair.generate();
 
-        // Airdrop SOL
+        // Airdrop SOL (only if accounts don't have enough balance)
+        const minBalance = 1 * anchor.web3.LAMPORTS_PER_SOL; // 1 SOL minimum
+
+        const checkAndAirdrop = async (pubkey: PublicKey, amount: number) => {
+            try {
+                const balance = await provider.connection.getBalance(pubkey);
+                if (balance < minBalance) {
+                    console.log(
+                        `Airdropping ${
+                            amount / anchor.web3.LAMPORTS_PER_SOL
+                        } SOL to ${pubkey.toString()}`
+                    );
+                    const tx = await provider.connection.requestAirdrop(
+                        pubkey,
+                        amount
+                    );
+                    await provider.connection.confirmTransaction(tx);
+                } else {
+                    console.log(
+                        `Account ${pubkey.toString()} already has ${
+                            balance / anchor.web3.LAMPORTS_PER_SOL
+                        } SOL, skipping airdrop`
+                    );
+                }
+            } catch (err: any) {
+                if (
+                    err.message?.includes("429") ||
+                    err.message?.includes("rate limit")
+                ) {
+                    console.warn(
+                        `Rate limit hit for ${pubkey.toString()}, account may need manual funding`
+                    );
+                } else {
+                    throw err;
+                }
+            }
+        };
+
         const airdrops = [
-            authority.publicKey,
-            owner.publicKey,
-            payer.publicKey,
-            userTransferAuthority.publicKey,
+            {
+                pubkey: authority.publicKey,
+                amount: 2 * anchor.web3.LAMPORTS_PER_SOL,
+            },
+            {
+                pubkey: owner.publicKey,
+                amount: 2 * anchor.web3.LAMPORTS_PER_SOL,
+            },
+            {
+                pubkey: payer.publicKey,
+                amount: 2 * anchor.web3.LAMPORTS_PER_SOL,
+            },
+            {
+                pubkey: userTransferAuthority.publicKey,
+                amount: 2 * anchor.web3.LAMPORTS_PER_SOL,
+            },
         ];
 
-        for (const pubkey of airdrops) {
-            const tx = await provider.connection.requestAirdrop(
-                pubkey,
-                2 * anchor.web3.LAMPORTS_PER_SOL
-            );
-            await provider.connection.confirmTransaction(tx);
+        for (const { pubkey, amount } of airdrops) {
+            await checkAndAirdrop(pubkey, amount);
         }
 
         // Derive PDAs
@@ -141,6 +186,16 @@ describe("Jupiter CPI Integration", () => {
                     tokenBVault: tokenBVault,
                     pool: pool,
                     auditLog: auditLog,
+                    raydiumProgram: null,
+                    raydiumPoolState: null,
+                    raydiumPersonalPosition: null,
+                    raydiumTickArrayLower: null,
+                    raydiumTickArrayUpper: null,
+                    raydiumTokenAccount0: null,
+                    raydiumTokenAccount1: null,
+                    raydiumTokenVault0: null,
+                    raydiumTokenVault1: null,
+                    tokenProgram: null,
                     systemProgram: SystemProgram.programId,
                 })
                 .signers([owner])
@@ -228,6 +283,16 @@ describe("Jupiter CPI Integration", () => {
                     destinationTokenAccount: null,
                     programAuthority: null,
                     userTransferAuthority: null,
+                    raydiumProgram: null,
+                    raydiumPosition: null,
+                    raydiumPoolState: null,
+                    raydiumTickArrayLower: null,
+                    raydiumTickArrayUpper: null,
+                    raydiumTokenAccount0: null,
+                    raydiumTokenAccount1: null,
+                    raydiumTokenVault0: null,
+                    raydiumTokenVault1: null,
+                    raydiumTokenProgram: null,
                 })
                 .rpc();
 
@@ -366,6 +431,16 @@ describe("Jupiter CPI Integration", () => {
                         destinationTokenAccount: tokenBVault,
                         programAuthority: swapProgramAuthority,
                         userTransferAuthority: null,
+                        raydiumProgram: null,
+                        raydiumPosition: null,
+                        raydiumPoolState: null,
+                        raydiumTickArrayLower: null,
+                        raydiumTickArrayUpper: null,
+                        raydiumTokenAccount0: null,
+                        raydiumTokenAccount1: null,
+                        raydiumTokenVault0: null,
+                        raydiumTokenVault1: null,
+                        raydiumTokenProgram: null,
                         // Note: This will fail at CPI invocation (Jupiter program not deployed in test),
                         // but validates that the instruction structure and validation logic is correct
                     })
@@ -500,6 +575,16 @@ describe("Jupiter CPI Integration", () => {
                     destinationTokenAccount: null,
                     programAuthority: null,
                     userTransferAuthority: null,
+                    raydiumProgram: null,
+                    raydiumPosition: null,
+                    raydiumPoolState: null,
+                    raydiumTickArrayLower: null,
+                    raydiumTickArrayUpper: null,
+                    raydiumTokenAccount0: null,
+                    raydiumTokenAccount1: null,
+                    raydiumTokenVault0: null,
+                    raydiumTokenVault1: null,
+                    raydiumTokenProgram: null,
                 })
                 .rpc();
 
@@ -657,6 +742,16 @@ describe("Jupiter CPI Integration", () => {
                         destinationTokenAccount: tokenBVault,
                         programAuthority: null,
                         userTransferAuthority: userTransferAuthority.publicKey,
+                        raydiumProgram: null,
+                        raydiumPosition: null,
+                        raydiumPoolState: null,
+                        raydiumTickArrayLower: null,
+                        raydiumTickArrayUpper: null,
+                        raydiumTokenAccount0: null,
+                        raydiumTokenAccount1: null,
+                        raydiumTokenVault0: null,
+                        raydiumTokenVault1: null,
+                        raydiumTokenProgram: null,
                         // Using user transfer authority instead of PDA
                     })
                     .signers([userTransferAuthority])
@@ -713,6 +808,16 @@ describe("Jupiter CPI Integration", () => {
                     tokenBVault: tokenBVault,
                     pool: pool,
                     auditLog: auditLog,
+                    raydiumProgram: null,
+                    raydiumPoolState: null,
+                    raydiumPersonalPosition: null,
+                    raydiumTickArrayLower: null,
+                    raydiumTickArrayUpper: null,
+                    raydiumTokenAccount0: null,
+                    raydiumTokenAccount1: null,
+                    raydiumTokenVault0: null,
+                    raydiumTokenVault1: null,
+                    tokenProgram: null,
                     systemProgram: SystemProgram.programId,
                 })
                 .signers([owner])
@@ -803,6 +908,16 @@ describe("Jupiter CPI Integration", () => {
                         destinationTokenAccount: tokenBVault,
                         programAuthority: validationProgramAuthority,
                         userTransferAuthority: null,
+                        raydiumProgram: null,
+                        raydiumPosition: null,
+                        raydiumPoolState: null,
+                        raydiumTickArrayLower: null,
+                        raydiumTickArrayUpper: null,
+                        raydiumTokenAccount0: null,
+                        raydiumTokenAccount1: null,
+                        raydiumTokenVault0: null,
+                        raydiumTokenVault1: null,
+                        raydiumTokenProgram: null,
                     })
                     .rpc();
                 expect.fail("Should have failed validation");
