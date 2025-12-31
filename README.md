@@ -7,37 +7,43 @@ The Fabrknt SDK provides a comprehensive toolkit for Web3 developers to build se
 ## 📦 Packages
 
 ### Core SDK
-- **[core](./core/)** - Main SDK package (`@fabrknt/sdk`)
-  - Core financial operations
-  - Chain abstraction (Solana + EVM)
-  - Pre-built patterns (DeFi, DAO treasury, AI agents)
+
+-   **[core](./core/)** - Main SDK package (`@fabrknt/sdk`)
+    -   Core financial operations
+    -   Chain abstraction (Solana + EVM)
+    -   Pre-built patterns (DeFi, DAO treasury, AI agents)
 
 ### Security & Risk Modules
-- **[guard](./guard/)** - Real-time transaction validation
-  - 8 security patterns (slippage, drain, CPI, reentrancy, etc.)
-  - 3 enforcement modes (block, warn, monitor)
 
-- **[risk](./risk/)** - AI-driven risk assessment
-  - RWA risk scoring
-  - Compliance checks
-  - Oracle integrity monitoring
+-   **[guard](./guard/)** - Real-time transaction validation
+
+    -   8 security patterns (slippage, drain, CPI, reentrancy, etc.)
+    -   3 enforcement modes (block, warn, monitor)
+
+-   **[risk](./risk/)** - AI-driven risk assessment
+    -   RWA risk scoring
+    -   Compliance checks
+    -   Oracle integrity monitoring
 
 ### Performance & Optimization
-- **[loom](./loom/)** - Parallel execution engine
-  - Jito bundle integration
-  - Multi-transaction optimization
-  - Gas optimization
 
-- **[flow](./flow/)** - DEX integration layer
-  - Jupiter V6 integration
-  - Multi-DEX liquidity routing
-  - Raydium CLMM support (in progress)
+-   **[loom](./loom/)** - Parallel execution engine
+
+    -   Jito bundle integration
+    -   Multi-transaction optimization
+    -   Gas optimization
+
+-   **[flow](./flow/)** - DEX integration layer
+    -   Jupiter V6 integration
+    -   Multi-DEX liquidity routing
+    -   Raydium CLMM support (in progress)
 
 ### Privacy
-- **[privacy](./privacy/)** - ZK compression
-  - Light Protocol integration
-  - Compressed state management
-  - Experimental (Phase 2)
+
+-   **[privacy](./privacy/)** - ZK compression
+    -   Light Protocol integration
+    -   Compressed state management
+    -   Experimental (Phase 2)
 
 ## 🚀 Quick Start
 
@@ -52,16 +58,16 @@ import { BatchPayoutPattern, Guard } from "@fabrknt/sdk";
 
 // Create secure batch payout with built-in security
 const payroll = new BatchPayoutPattern({
-  name: "Monthly Payroll",
-  recipients: [
-    { address: "...", amount: 1000 },
-    { address: "...", amount: 2000 },
-  ],
-  guard: new Guard({
-    maxSlippage: 0.01,
-    mode: "block"
-  }),
-  enableParallel: true
+    name: "Monthly Payroll",
+    recipients: [
+        { address: "...", amount: 1000 },
+        { address: "...", amount: 2000 },
+    ],
+    guard: new Guard({
+        maxSlippage: 0.01,
+        mode: "block",
+    }),
+    enableParallel: true,
 });
 
 const result = await payroll.execute();
@@ -69,10 +75,10 @@ const result = await payroll.execute();
 
 ## 📚 Documentation
 
-- **[Main SDK Docs](./core/README.md)** - Complete SDK documentation
-- **[Examples](./core/examples/)** - Code examples
-- **[Business Plan](./core/BUSINESS_PLAN.md)** - SDK vision and roadmap
-- **[Known Limitations](./core/KNOWN_LIMITATIONS.md)** - Current limitations
+-   **[Main SDK Docs](./core/README.md)** - Complete SDK documentation
+-   **[Examples](./core/examples/)** - Code examples
+-   **[Business Plan](../marketing/BUSINESS_PLAN.md)** - SDK vision and roadmap
+-   **[Known Limitations](./core/KNOWN_LIMITATIONS.md)** - Current limitations
 
 ## 🏗️ Repository Structure
 
@@ -89,22 +95,22 @@ fabrknt-sdk/
 
 ## 🌟 Key Features
 
-- **Chain Abstraction** - Write once, run on Solana and EVM chains
-- **Built-in Security** - Real-time validation with Guard module
-- **Risk Assessment** - AI-driven risk scoring for RWA and DeFi
-- **Parallel Execution** - Optimize gas with Loom's parallel processing
-- **Pre-built Patterns** - Production-ready templates for common operations
-- **Type Safety** - Full TypeScript support
+-   **Chain Abstraction** - Write once, run on Solana and EVM chains
+-   **Built-in Security** - Real-time validation with Guard module
+-   **Risk Assessment** - AI-driven risk scoring for RWA and DeFi
+-   **Parallel Execution** - Optimize gas with Loom's parallel processing
+-   **Pre-built Patterns** - Production-ready templates for common operations
+-   **Type Safety** - Full TypeScript support
 
 ## 📊 Status
 
-- **Version**: 0.3.1 (Beta)
-- **Recommended**: Devnet/Testnet only
-- **Production**: Guard + Risk modules only
+-   **Version**: 0.3.1 (Beta)
+-   **Recommended**: Devnet/Testnet only
+-   **Production**: Guard + Risk modules only
 
 ## 🔗 Related Projects
 
-- **[Fabrknt Suite](https://github.com/fabrknt/fabrknt-suite)** - SaaS applications built with Fabrknt SDK (PULSE, TRACE, FABRIC)
+-   **[Fabrknt Suite](https://github.com/fabrknt/fabrknt-suite)** - SaaS applications built with Fabrknt SDK (PULSE, TRACE, FABRIC)
 
 ## 🤝 Contributing
 
@@ -116,9 +122,9 @@ See individual package licenses. Core SDK is typically MIT or Apache 2.0.
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/fabrknt/fabrknt-sdk/discussions)
-- **Documentation**: [Full Docs](./core/README.md)
+-   **Issues**: [GitHub Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
+-   **Discussions**: [GitHub Discussions](https://github.com/fabrknt/fabrknt-sdk/discussions)
+-   **Documentation**: [Full Docs](./core/README.md)
 
 ---
 

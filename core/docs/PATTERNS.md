@@ -1144,7 +1144,7 @@ for (const tx of result.transactions) {
 -   [Main README](../README.md)
 -   [API Documentation](./API.md)
 -   [Examples](../examples/patterns/)
--   [Business Plan](../BUSINESS_PLAN.md)
+-   [Business Plan](../../../marketing/BUSINESS_PLAN.md)
 
 ## Support
 
