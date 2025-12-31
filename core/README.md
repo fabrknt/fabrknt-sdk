@@ -21,7 +21,7 @@ pnpm add @fabrknt/sdk
 
 **Note:** For development or contributing, you can also install directly from GitHub.
 
-[Documentation](https://github.com/fabrknt/fabrknt-sdk/tree/master/core) | [Examples](https://github.com/fabrknt/fabrknt-sdk/tree/master/core/examples) | [API Reference](https://github.com/fabrknt/fabrknt-sdk/tree/master/core#api-reference) | [Discord](https://discord.gg/fabrknt)
+[Documentation](https://github.com/fabrknt/fabrknt-sdk/tree/main/core) | [Examples](https://github.com/fabrknt/fabrknt-sdk/tree/main/core/examples) | [API Reference](https://github.com/fabrknt/fabrknt-sdk/tree/main/core#api-reference) | [Discord](https://discord.gg/fabrknt)
 
 ---
 
@@ -380,11 +380,11 @@ Open source SDK for building crypto financial operations on Solana. **Built by t
 
 Fabrknt SDK is composed of five core modules, each providing specialized functionality. **Each module can be used independently** or integrated through the unified `@fabrknt/sdk` package. Pick what you need:
 
--   **[flow](https://github.com/fabrknt/fabrknt-sdk/tree/master/flow)** - The Liquidity Backbone
--   **[guard](https://github.com/fabrknt/fabrknt-sdk/tree/master/guard)** - Security & Compliance
--   **[loom](https://github.com/fabrknt/fabrknt-sdk/tree/master/loom)** - Parallel Execution Logic
--   **[risk](https://github.com/fabrknt/fabrknt-sdk/tree/master/risk)** - Risk: RWA Risk Oracle & Integrity Gateway
--   **[privacy](https://github.com/fabrknt/fabrknt-sdk/tree/master/privacy)** - Privacy: Shielded State Middleware & Privacy Layer
+-   **[flow](https://github.com/fabrknt/fabrknt-sdk/tree/main/flow)** - The Liquidity Backbone
+-   **[guard](https://github.com/fabrknt/fabrknt-sdk/tree/main/guard)** - Security & Compliance
+-   **[loom](https://github.com/fabrknt/fabrknt-sdk/tree/main/loom)** - Parallel Execution Logic
+-   **[risk](https://github.com/fabrknt/fabrknt-sdk/tree/main/risk)** - Risk: RWA Risk Oracle & Integrity Gateway
+-   **[privacy](https://github.com/fabrknt/fabrknt-sdk/tree/main/privacy)** - Privacy: Shielded State Middleware & Privacy Layer
 
 **Use independently:** Each module is a standalone package with its own documentation, tests, and implementation.
 **Use together:** Integrate all modules through the unified `@fabrknt/sdk` package for a complete solution.

@@ -6,7 +6,7 @@
 
 Guard is a monitoring tool that prevents "operational disasters" by detecting dangerous instructions in Solana transactions. It provides safety-first UX with human-readable warnings for critical authority changes, helping Solana project operators and developers avoid costly mistakes.
 
-[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/master/guard) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
+[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/main/guard) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
 
 ---
 

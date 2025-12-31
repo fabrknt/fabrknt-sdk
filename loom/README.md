@@ -6,7 +6,7 @@
 
 Loom (SolFabric) provides the underlying infrastructure layer that delivers "Inclusion Assurance" and high-performance execution for Solana DeFi applications. It acts as a bridge between off-chain bots/users and on-chain validators, leveraging Jito Bundles and ShredStream for maximum velocity.
 
-[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/master/loom) | [SDK Documentation](./sdk/README.md) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
+[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/main/loom) | [SDK Documentation](./sdk/README.md) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
 
 ---
 

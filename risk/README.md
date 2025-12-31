@@ -6,7 +6,7 @@
 
 Risk is a Solana-based RWA (Real-World Assets) Risk Gateway that implements the x402 protocol for pay-per-call API access. It delivers institutional-grade RWA risk data on a high-frequency, pay-per-call basis, enabling AI agents and DeFi protocols to access critical risk metrics without traditional API keys.
 
-[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/master/risk) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
+[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/main/risk) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
 
 ---
 

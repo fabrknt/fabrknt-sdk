@@ -6,7 +6,7 @@
 
 Privacy provides ZK Compression (Zero-Knowledge Compression) infrastructure for Solana, enabling cost-efficient private transactions and state management. Built on Light Protocol's ZK Compression technology, it dramatically reduces costs while providing privacy-by-default through compressed state.
 
-[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/master/privacy) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
+[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/main/privacy) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
 
 ---
 

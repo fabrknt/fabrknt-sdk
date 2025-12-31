@@ -6,7 +6,7 @@
 
 Flow is an AI-Driven Autonomous Concentrated Liquidity Management Protocol (A-CLM) specialized for Solana's high-performance DeFi ecosystem. It maximizes capital efficiency for Liquidity Providers (LPs) on DEXs like Raydium and Orca, while generating revenue by offering high-performance market prediction services to external AI agents via x402.
 
-[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/master/flow) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
+[Repository](https://github.com/fabrknt/fabrknt-sdk/tree/main/flow) | [Documentation](./docs/) | [Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
 
 ---
 
