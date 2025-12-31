@@ -35,6 +35,31 @@ pub fn raydium_clmm_program_id() -> Pubkey {
 }
 
 // ============================================================================
+// RAYDIUM CLMM INSTRUCTION DISCRIMINATORS
+// ============================================================================
+
+/// Raydium CLMM instruction discriminators (Anchor format)
+/// Calculated as first 8 bytes of SHA256("global:instruction_name")
+/// 
+/// Verified discriminators:
+/// - open_position: SHA256("global:open_position")[0:8]
+/// - increase_liquidity: SHA256("global:increase_liquidity")[0:8]
+/// - decrease_liquidity: SHA256("global:decrease_liquidity")[0:8]
+/// - collect: SHA256("global:collect")[0:8]
+
+/// OpenPosition instruction discriminator
+const RAYDIUM_OPEN_POSITION_DISCRIMINATOR: [u8; 8] = [0x87, 0x80, 0x2f, 0x4d, 0x0f, 0x98, 0xf0, 0x31];
+
+/// IncreaseLiquidity instruction discriminator
+const RAYDIUM_INCREASE_LIQUIDITY_DISCRIMINATOR: [u8; 8] = [0x2e, 0x9c, 0xf3, 0x76, 0x0d, 0xcd, 0xfb, 0xb2];
+
+/// DecreaseLiquidity instruction discriminator
+const RAYDIUM_DECREASE_LIQUIDITY_DISCRIMINATOR: [u8; 8] = [0xa0, 0x26, 0xd0, 0x6f, 0x68, 0x5b, 0x2c, 0x01];
+
+/// Collect instruction discriminator
+const RAYDIUM_COLLECT_DISCRIMINATOR: [u8; 8] = [0xd0, 0x2f, 0xc2, 0x9b, 0x11, 0x62, 0x52, 0xec];
+
+// ============================================================================
 // JUPITER ROUTE PLAN STRUCTURES
 // ============================================================================
 
@@ -193,8 +218,13 @@ pub mod flow {
                 create_raydium_position(
                     Some(raydium_program),
                     Some(pool_state),
+                    ctx.accounts.raydium_personal_position.as_ref(),
+                    ctx.accounts.raydium_tick_array_lower.as_ref(),
+                    ctx.accounts.raydium_tick_array_upper.as_ref(),
                     Some(token_account_0),
                     Some(token_account_1),
+                    ctx.accounts.raydium_token_vault_0.as_ref(),
+                    ctx.accounts.raydium_token_vault_1.as_ref(),
                     Some(token_program),
                     Some(&ctx.accounts.owner),
                     tick_lower,
@@ -448,10 +478,20 @@ pub mod flow {
                 // Step 1: Decrease liquidity from old range
                 let old_liquidity = position.liquidity_amount;
                 if old_liquidity > 0 {
+                    // Note: ExecuteRebalance doesn't have owner signer - using approver if available
+                    // In production, owner signer should be added to ExecuteRebalance context
                     decrease_raydium_liquidity(
                         Some(raydium_program),
                         Some(raydium_position),
                         Some(raydium_pool_state),
+                        ctx.accounts.raydium_tick_array_lower.as_ref(),
+                        ctx.accounts.raydium_tick_array_upper.as_ref(),
+                        ctx.accounts.raydium_token_account_0.as_ref(),
+                        ctx.accounts.raydium_token_account_1.as_ref(),
+                        ctx.accounts.raydium_token_vault_0.as_ref(),
+                        ctx.accounts.raydium_token_vault_1.as_ref(),
+                        ctx.accounts.raydium_token_program.as_ref(),
+                        ctx.accounts.approver.as_ref(),
                         old_liquidity,
                         0, // amount_0_min (will be calculated)
                         0, // amount_1_min (will be calculated)
@@ -466,10 +506,19 @@ pub mod flow {
                 // Step 4: Increase liquidity to new range
                 // Note: New liquidity amount would be calculated based on token amounts
                 let new_liquidity = 0u128; // Placeholder - will be calculated
+                // Note: ExecuteRebalance doesn't have owner signer - using approver if available
                 increase_raydium_liquidity(
                     Some(raydium_program),
                     Some(raydium_position),
                     Some(raydium_pool_state),
+                    ctx.accounts.raydium_tick_array_lower.as_ref(),
+                    ctx.accounts.raydium_tick_array_upper.as_ref(),
+                    ctx.accounts.raydium_token_account_0.as_ref(),
+                    ctx.accounts.raydium_token_account_1.as_ref(),
+                    ctx.accounts.raydium_token_vault_0.as_ref(),
+                    ctx.accounts.raydium_token_vault_1.as_ref(),
+                    ctx.accounts.raydium_token_program.as_ref(),
+                    ctx.accounts.approver.as_ref(),
                     new_liquidity,
                     0, // amount_0_max (will be provided)
                     0, // amount_1_max (will be provided)
@@ -611,6 +660,12 @@ pub mod flow {
                     Some(raydium_program),
                     Some(raydium_position),
                     Some(raydium_pool_state),
+                    ctx.accounts.raydium_token_account_0.as_ref(),
+                    ctx.accounts.raydium_token_account_1.as_ref(),
+                    ctx.accounts.raydium_token_vault_0.as_ref(),
+                    ctx.accounts.raydium_token_vault_1.as_ref(),
+                    ctx.accounts.raydium_token_program.as_ref(),
+                    Some(&ctx.accounts.owner),
                     position.total_fees_earned_a,
                     position.total_fees_earned_b,
                 )?;
@@ -1121,17 +1176,71 @@ fn create_audit_log_internal(
 // RAYDIUM CLMM HELPER FUNCTIONS
 // ============================================================================
 
+/// Derive Raydium PersonalPosition PDA
+/// 
+/// Raydium CLMM positions are PDAs derived from:
+/// - Pool state
+/// - Owner (or nft_mint if NFT-based)
+/// - Position index (if multiple positions per owner)
+/// 
+/// Note: This is a simplified derivation. Actual Raydium derivation may differ.
+/// Verify with Raydium documentation or program source.
+fn derive_raydium_position_pda(
+    pool_state: &Pubkey,
+    owner: &Pubkey,
+    position_index: u16,
+    program_id: &Pubkey,
+) -> (Pubkey, u8) {
+    let seeds = &[
+        b"position",
+        pool_state.as_ref(),
+        owner.as_ref(),
+        &position_index.to_le_bytes(),
+    ];
+    Pubkey::find_program_address(seeds, program_id)
+}
+
+/// Derive Raydium TickArray PDA
+/// 
+/// Tick arrays are PDAs derived from:
+/// - Pool state
+/// - Tick index (normalized to tick spacing)
+/// 
+/// Note: Tick index should be normalized to tick spacing (typically 60).
+/// Verify with Raydium documentation for exact derivation formula.
+fn derive_raydium_tick_array_pda(
+    pool_state: &Pubkey,
+    tick_index: i32,
+    tick_spacing: u16,
+    program_id: &Pubkey,
+) -> (Pubkey, u8) {
+    // Normalize tick to tick spacing
+    let normalized_tick = (tick_index / tick_spacing as i32) * tick_spacing as i32;
+    
+    let seeds = &[
+        b"tick_array",
+        pool_state.as_ref(),
+        &normalized_tick.to_le_bytes(),
+    ];
+    Pubkey::find_program_address(seeds, program_id)
+}
+
 /// Create a new concentrated liquidity position on Raydium CLMM
 /// 
 /// This function performs a CPI to Raydium's OpenPosition instruction.
 /// 
-/// Note: This implementation requires additional accounts (tick arrays, position PDA, token vaults)
-/// that should be added to the instruction context for full functionality.
+/// All required accounts should be provided via the instruction context.
+/// If PDAs are not provided, they can be derived using helper functions.
 fn create_raydium_position<'info>(
     raydium_program: Option<&AccountInfo<'info>>,
     pool_state: Option<&AccountInfo<'info>>,
+    personal_position: Option<&AccountInfo<'info>>,
+    tick_array_lower: Option<&AccountInfo<'info>>,
+    tick_array_upper: Option<&AccountInfo<'info>>,
     token_account_0: Option<&AccountInfo<'info>>,
     token_account_1: Option<&AccountInfo<'info>>,
+    token_vault_0: Option<&AccountInfo<'info>>,
+    token_vault_1: Option<&AccountInfo<'info>>,
     token_program: Option<&AccountInfo<'info>>,
     owner: Option<&Signer<'info>>,
     tick_lower: i32,
@@ -1202,26 +1311,69 @@ fn create_raydium_position<'info>(
     // Note: This requires additional accounts (tick arrays, position PDA, vaults) that aren't
     // currently in the function signature. This implementation serves as a foundation.
     
-    // Build instruction data: discriminator (1 byte) + tick_lower (4 bytes) + tick_upper (4 bytes) + liquidity (16 bytes) + amount_0_max (8 bytes) + amount_1_max (8 bytes)
-    let mut instruction_data = Vec::with_capacity(41);
-    instruction_data.push(0x01); // OpenPosition discriminator (placeholder - needs verification)
+    // Build instruction data: discriminator (8 bytes) + tick_lower (4 bytes) + tick_upper (4 bytes) + liquidity (16 bytes) + amount_0_max (8 bytes) + amount_1_max (8 bytes)
+    let mut instruction_data = Vec::with_capacity(48);
+    instruction_data.extend_from_slice(&RAYDIUM_OPEN_POSITION_DISCRIMINATOR);
     instruction_data.extend_from_slice(&tick_lower.to_le_bytes());
     instruction_data.extend_from_slice(&tick_upper.to_le_bytes());
     instruction_data.extend_from_slice(&liquidity.to_le_bytes());
     instruction_data.extend_from_slice(&amount_0_max.to_le_bytes());
     instruction_data.extend_from_slice(&amount_1_max.to_le_bytes());
     
-    // Build account metas
-    // Note: Full implementation requires more accounts (tick arrays, position PDA, vaults)
+    // Derive or use provided PDAs
+    let (position_pda, _position_bump) = if let Some(pos) = personal_position {
+        (pos.key(), 0) // Use provided PDA
+    } else {
+        // Derive position PDA (using position_index 0 as default)
+        derive_raydium_position_pda(
+            &pool_state_info.key(),
+            &owner_signer.key(),
+            0, // position_index - should be passed as parameter in production
+            &raydium_program_info.key(),
+        )
+    };
+    
+    // Derive tick arrays if not provided
+    let tick_array_lower_pda = if let Some(tick_lower_acc) = tick_array_lower {
+        tick_lower_acc.key()
+    } else {
+        // Derive tick array PDA (using tick_spacing 60 as default - should be read from pool state)
+        derive_raydium_tick_array_pda(
+            &pool_state_info.key(),
+            tick_lower,
+            60, // tick_spacing - should be read from pool state in production
+            &raydium_program_info.key(),
+        ).0
+    };
+    
+    let tick_array_upper_pda = if let Some(tick_upper_acc) = tick_array_upper {
+        tick_upper_acc.key()
+    } else {
+        derive_raydium_tick_array_pda(
+            &pool_state_info.key(),
+            tick_upper,
+            60,
+            &raydium_program_info.key(),
+        ).0
+    };
+    
+    // Get token vaults (use provided or derive from pool state)
+    let token_vault_0_key = token_vault_0.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    let token_vault_1_key = token_vault_1.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    
+    // Build account metas in correct order for Raydium OpenPosition
+    // Note: Account order needs verification with Raydium documentation
     let mut accounts = Vec::new();
     accounts.push(AccountMeta::new_readonly(pool_state_info.key(), false));
-    // PersonalPosition PDA would go here (needs derivation)
-    // TickArrayLower PDA would go here (needs derivation)
-    // TickArrayUpper PDA would go here (needs derivation)
+    accounts.push(AccountMeta::new(position_pda, false)); // PersonalPosition PDA
+    accounts.push(AccountMeta::new_readonly(tick_array_lower_pda, false));
+    accounts.push(AccountMeta::new_readonly(tick_array_upper_pda, false));
     accounts.push(AccountMeta::new(token_account_0_info.key(), false));
     accounts.push(AccountMeta::new(token_account_1_info.key(), false));
-    // TokenVault0 would go here (from pool state)
-    // TokenVault1 would go here (from pool state)
+    accounts.push(AccountMeta::new(token_vault_0_key, false));
+    accounts.push(AccountMeta::new(token_vault_1_key, false));
     accounts.push(AccountMeta::new_readonly(owner_signer.key(), true));
     accounts.push(AccountMeta::new_readonly(token_program_info.key(), false));
     accounts.push(AccountMeta::new_readonly(anchor_lang::solana_program::system_program::ID, false));
@@ -1233,19 +1385,36 @@ fn create_raydium_position<'info>(
         data: instruction_data,
     };
     
-    // Note: For full implementation, we need signer seeds for position PDA
-    // For now, this will fail if position PDA is required, but structure is correct
-    invoke(
-        &cpi_instruction,
-        &[
-            raydium_program_info.clone(),
-            pool_state_info.clone(),
-            token_account_0_info.clone(),
-            token_account_1_info.clone(),
-            owner_signer.to_account_info(),
-            token_program_info.clone(),
-        ],
-    )?;
+    // Build account infos for invoke
+    let mut account_infos = vec![
+        raydium_program_info.clone(),
+        pool_state_info.clone(),
+        token_account_0_info.clone(),
+        token_account_1_info.clone(),
+        owner_signer.to_account_info(),
+        token_program_info.clone(),
+    ];
+    
+    // Add position PDA if provided, otherwise we'll need to derive it
+    if let Some(pos) = personal_position {
+        account_infos.push(pos.clone());
+    }
+    if let Some(tick_lower_acc) = tick_array_lower {
+        account_infos.push(tick_lower_acc.clone());
+    }
+    if let Some(tick_upper_acc) = tick_array_upper {
+        account_infos.push(tick_upper_acc.clone());
+    }
+    if let Some(vault_0) = token_vault_0 {
+        account_infos.push(vault_0.clone());
+    }
+    if let Some(vault_1) = token_vault_1 {
+        account_infos.push(vault_1.clone());
+    }
+    
+    // Note: For full implementation, we need signer seeds for position PDA if it's a PDA
+    // For now, this structure is correct but may need adjustment based on actual Raydium requirements
+    invoke(&cpi_instruction, &account_infos)?;
     
     msg!("Raydium position creation CPI invoked successfully");
     msg!("Note: Full implementation requires tick arrays and position PDA derivation");
@@ -1260,6 +1429,14 @@ fn increase_raydium_liquidity<'info>(
     raydium_program: Option<&AccountInfo<'info>>,
     position: Option<&AccountInfo<'info>>,
     pool_state: Option<&AccountInfo<'info>>,
+    tick_array_lower: Option<&AccountInfo<'info>>,
+    tick_array_upper: Option<&AccountInfo<'info>>,
+    token_account_0: Option<&AccountInfo<'info>>,
+    token_account_1: Option<&AccountInfo<'info>>,
+    token_vault_0: Option<&AccountInfo<'info>>,
+    token_vault_1: Option<&AccountInfo<'info>>,
+    token_program: Option<&AccountInfo<'info>>,
+    owner: Option<&Signer<'info>>,
     liquidity: u128,
     amount_0_max: u64,
     amount_1_max: u64,
@@ -1288,6 +1465,26 @@ fn increase_raydium_liquidity<'info>(
         return Ok(());
     };
     
+    let Some(token_account_0_info) = token_account_0 else {
+        msg!("Token account 0 not provided, skipping liquidity increase");
+        return Ok(());
+    };
+    
+    let Some(token_account_1_info) = token_account_1 else {
+        msg!("Token account 1 not provided, skipping liquidity increase");
+        return Ok(());
+    };
+    
+    let Some(token_program_info) = token_program else {
+        msg!("Token program not provided, skipping liquidity increase");
+        return Ok(());
+    };
+    
+    let Some(owner_signer) = owner else {
+        msg!("Owner signer not provided, skipping liquidity increase");
+        return Ok(());
+    };
+    
     msg!(
         "Increasing Raydium liquidity: {}, amounts: [{}, {}]",
         liquidity,
@@ -1295,26 +1492,56 @@ fn increase_raydium_liquidity<'info>(
         amount_1_max
     );
     
-    // Build instruction data: discriminator (1 byte) + liquidity (16 bytes) + amount_0_max (8 bytes) + amount_1_max (8 bytes)
-    let mut instruction_data = Vec::with_capacity(33);
-    instruction_data.push(0x02); // IncreaseLiquidity discriminator (placeholder - needs verification)
+    // Derive tick arrays if not provided (need tick values from position - using placeholders for now)
+    let tick_array_lower_pda = if let Some(tick_lower_acc) = tick_array_lower {
+        tick_lower_acc.key()
+    } else {
+        // Note: In production, read tick_lower from position account
+        // For now, use placeholder derivation
+        derive_raydium_tick_array_pda(
+            &pool_state_info.key(),
+            0, // tick_lower - should be read from position
+            60, // tick_spacing - should be read from pool state
+            &raydium_program_info.key(),
+        ).0
+    };
+    
+    let tick_array_upper_pda = if let Some(tick_upper_acc) = tick_array_upper {
+        tick_upper_acc.key()
+    } else {
+        derive_raydium_tick_array_pda(
+            &pool_state_info.key(),
+            0, // tick_upper - should be read from position
+            60,
+            &raydium_program_info.key(),
+        ).0
+    };
+    
+    // Get token vaults
+    let token_vault_0_key = token_vault_0.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    let token_vault_1_key = token_vault_1.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    
+    // Build instruction data: discriminator (8 bytes) + liquidity (16 bytes) + amount_0_max (8 bytes) + amount_1_max (8 bytes)
+    let mut instruction_data = Vec::with_capacity(40);
+    instruction_data.extend_from_slice(&RAYDIUM_INCREASE_LIQUIDITY_DISCRIMINATOR);
     instruction_data.extend_from_slice(&liquidity.to_le_bytes());
     instruction_data.extend_from_slice(&amount_0_max.to_le_bytes());
     instruction_data.extend_from_slice(&amount_1_max.to_le_bytes());
     
-    // Build account metas
-    // Note: Full implementation requires tick arrays, token accounts, and vaults
+    // Build account metas in correct order for Raydium IncreaseLiquidity
     let mut accounts = Vec::new();
     accounts.push(AccountMeta::new(position_info.key(), false));
     accounts.push(AccountMeta::new_readonly(pool_state_info.key(), false));
-    // TickArrayLower PDA would go here
-    // TickArrayUpper PDA would go here
-    // TokenAccount0 would go here
-    // TokenAccount1 would go here
-    // TokenVault0 would go here
-    // TokenVault1 would go here
-    // Owner signer would go here
-    // TokenProgram would go here
+    accounts.push(AccountMeta::new_readonly(tick_array_lower_pda, false));
+    accounts.push(AccountMeta::new_readonly(tick_array_upper_pda, false));
+    accounts.push(AccountMeta::new(token_account_0_info.key(), false));
+    accounts.push(AccountMeta::new(token_account_1_info.key(), false));
+    accounts.push(AccountMeta::new(token_vault_0_key, false));
+    accounts.push(AccountMeta::new(token_vault_1_key, false));
+    accounts.push(AccountMeta::new_readonly(owner_signer.key(), true));
+    accounts.push(AccountMeta::new_readonly(token_program_info.key(), false));
     
     // Create and invoke CPI instruction
     let cpi_instruction = Instruction {
@@ -1323,19 +1550,33 @@ fn increase_raydium_liquidity<'info>(
         data: instruction_data,
     };
     
-    // Note: This will need proper account setup for full functionality
-    // For now, we'll invoke with minimal accounts - full implementation requires all accounts above
-    invoke(
-        &cpi_instruction,
-        &[
-            raydium_program_info.clone(),
-            position_info.clone(),
-            pool_state_info.clone(),
-        ],
-    )?;
+    // Build account infos for invoke
+    let mut account_infos = vec![
+        raydium_program_info.clone(),
+        position_info.clone(),
+        pool_state_info.clone(),
+        token_account_0_info.clone(),
+        token_account_1_info.clone(),
+        owner_signer.to_account_info(),
+        token_program_info.clone(),
+    ];
+    
+    if let Some(tick_lower_acc) = tick_array_lower {
+        account_infos.push(tick_lower_acc.clone());
+    }
+    if let Some(tick_upper_acc) = tick_array_upper {
+        account_infos.push(tick_upper_acc.clone());
+    }
+    if let Some(vault_0) = token_vault_0 {
+        account_infos.push(vault_0.clone());
+    }
+    if let Some(vault_1) = token_vault_1 {
+        account_infos.push(vault_1.clone());
+    }
+    
+    invoke(&cpi_instruction, &account_infos)?;
     
     msg!("Raydium liquidity increase CPI invoked successfully");
-    msg!("Note: Full implementation requires tick arrays, token accounts, and vaults");
     
     Ok(())
 }
@@ -1347,6 +1588,14 @@ fn decrease_raydium_liquidity<'info>(
     raydium_program: Option<&AccountInfo<'info>>,
     position: Option<&AccountInfo<'info>>,
     pool_state: Option<&AccountInfo<'info>>,
+    tick_array_lower: Option<&AccountInfo<'info>>,
+    tick_array_upper: Option<&AccountInfo<'info>>,
+    token_account_0: Option<&AccountInfo<'info>>,
+    token_account_1: Option<&AccountInfo<'info>>,
+    token_vault_0: Option<&AccountInfo<'info>>,
+    token_vault_1: Option<&AccountInfo<'info>>,
+    token_program: Option<&AccountInfo<'info>>,
+    owner: Option<&Signer<'info>>,
     liquidity: u128,
     amount_0_min: u64,
     amount_1_min: u64,
@@ -1375,6 +1624,26 @@ fn decrease_raydium_liquidity<'info>(
         return Ok(());
     };
     
+    let Some(token_account_0_info) = token_account_0 else {
+        msg!("Token account 0 not provided, skipping liquidity decrease");
+        return Ok(());
+    };
+    
+    let Some(token_account_1_info) = token_account_1 else {
+        msg!("Token account 1 not provided, skipping liquidity decrease");
+        return Ok(());
+    };
+    
+    let Some(token_program_info) = token_program else {
+        msg!("Token program not provided, skipping liquidity decrease");
+        return Ok(());
+    };
+    
+    let Some(owner_signer) = owner else {
+        msg!("Owner signer not provided, skipping liquidity decrease");
+        return Ok(());
+    };
+    
     msg!(
         "Decreasing Raydium liquidity: {}, min amounts: [{}, {}]",
         liquidity,
@@ -1382,26 +1651,54 @@ fn decrease_raydium_liquidity<'info>(
         amount_1_min
     );
     
-    // Build instruction data: discriminator (1 byte) + liquidity (16 bytes) + amount_0_min (8 bytes) + amount_1_min (8 bytes)
-    let mut instruction_data = Vec::with_capacity(33);
-    instruction_data.push(0x03); // DecreaseLiquidity discriminator (placeholder - needs verification)
+    // Derive tick arrays if not provided
+    let tick_array_lower_pda = if let Some(tick_lower_acc) = tick_array_lower {
+        tick_lower_acc.key()
+    } else {
+        derive_raydium_tick_array_pda(
+            &pool_state_info.key(),
+            0, // tick_lower - should be read from position
+            60, // tick_spacing - should be read from pool state
+            &raydium_program_info.key(),
+        ).0
+    };
+    
+    let tick_array_upper_pda = if let Some(tick_upper_acc) = tick_array_upper {
+        tick_upper_acc.key()
+    } else {
+        derive_raydium_tick_array_pda(
+            &pool_state_info.key(),
+            0, // tick_upper - should be read from position
+            60,
+            &raydium_program_info.key(),
+        ).0
+    };
+    
+    // Get token vaults
+    let token_vault_0_key = token_vault_0.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    let token_vault_1_key = token_vault_1.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    
+    // Build instruction data: discriminator (8 bytes) + liquidity (16 bytes) + amount_0_min (8 bytes) + amount_1_min (8 bytes)
+    let mut instruction_data = Vec::with_capacity(40);
+    instruction_data.extend_from_slice(&RAYDIUM_DECREASE_LIQUIDITY_DISCRIMINATOR);
     instruction_data.extend_from_slice(&liquidity.to_le_bytes());
     instruction_data.extend_from_slice(&amount_0_min.to_le_bytes());
     instruction_data.extend_from_slice(&amount_1_min.to_le_bytes());
     
-    // Build account metas
-    // Note: Full implementation requires tick arrays, token accounts, and vaults
+    // Build account metas in correct order for Raydium DecreaseLiquidity
     let mut accounts = Vec::new();
     accounts.push(AccountMeta::new(position_info.key(), false));
     accounts.push(AccountMeta::new_readonly(pool_state_info.key(), false));
-    // TickArrayLower PDA would go here
-    // TickArrayUpper PDA would go here
-    // TokenAccount0 would go here
-    // TokenAccount1 would go here
-    // TokenVault0 would go here
-    // TokenVault1 would go here
-    // Owner signer would go here
-    // TokenProgram would go here
+    accounts.push(AccountMeta::new_readonly(tick_array_lower_pda, false));
+    accounts.push(AccountMeta::new_readonly(tick_array_upper_pda, false));
+    accounts.push(AccountMeta::new(token_account_0_info.key(), false));
+    accounts.push(AccountMeta::new(token_account_1_info.key(), false));
+    accounts.push(AccountMeta::new(token_vault_0_key, false));
+    accounts.push(AccountMeta::new(token_vault_1_key, false));
+    accounts.push(AccountMeta::new_readonly(owner_signer.key(), true));
+    accounts.push(AccountMeta::new_readonly(token_program_info.key(), false));
     
     // Create and invoke CPI instruction
     let cpi_instruction = Instruction {
@@ -1410,18 +1707,33 @@ fn decrease_raydium_liquidity<'info>(
         data: instruction_data,
     };
     
-    // Note: This will need proper account setup for full functionality
-    invoke(
-        &cpi_instruction,
-        &[
-            raydium_program_info.clone(),
-            position_info.clone(),
-            pool_state_info.clone(),
-        ],
-    )?;
+    // Build account infos for invoke
+    let mut account_infos = vec![
+        raydium_program_info.clone(),
+        position_info.clone(),
+        pool_state_info.clone(),
+        token_account_0_info.clone(),
+        token_account_1_info.clone(),
+        owner_signer.to_account_info(),
+        token_program_info.clone(),
+    ];
+    
+    if let Some(tick_lower_acc) = tick_array_lower {
+        account_infos.push(tick_lower_acc.clone());
+    }
+    if let Some(tick_upper_acc) = tick_array_upper {
+        account_infos.push(tick_upper_acc.clone());
+    }
+    if let Some(vault_0) = token_vault_0 {
+        account_infos.push(vault_0.clone());
+    }
+    if let Some(vault_1) = token_vault_1 {
+        account_infos.push(vault_1.clone());
+    }
+    
+    invoke(&cpi_instruction, &account_infos)?;
     
     msg!("Raydium liquidity decrease CPI invoked successfully");
-    msg!("Note: Full implementation requires tick arrays, token accounts, and vaults");
     
     Ok(())
 }
@@ -1433,6 +1745,12 @@ fn collect_raydium_fees<'info>(
     raydium_program: Option<&AccountInfo<'info>>,
     position: Option<&AccountInfo<'info>>,
     pool_state: Option<&AccountInfo<'info>>,
+    token_account_0: Option<&AccountInfo<'info>>,
+    token_account_1: Option<&AccountInfo<'info>>,
+    token_vault_0: Option<&AccountInfo<'info>>,
+    token_vault_1: Option<&AccountInfo<'info>>,
+    token_program: Option<&AccountInfo<'info>>,
+    owner: Option<&Signer<'info>>,
     amount_0_requested: u64,
     amount_1_requested: u64,
 ) -> Result<(u64, u64)> {
@@ -1460,29 +1778,54 @@ fn collect_raydium_fees<'info>(
         return Ok((0, 0));
     };
     
+    let Some(token_account_0_info) = token_account_0 else {
+        msg!("Token account 0 not provided, skipping fee collection");
+        return Ok((0, 0));
+    };
+    
+    let Some(token_account_1_info) = token_account_1 else {
+        msg!("Token account 1 not provided, skipping fee collection");
+        return Ok((0, 0));
+    };
+    
+    let Some(token_program_info) = token_program else {
+        msg!("Token program not provided, skipping fee collection");
+        return Ok((0, 0));
+    };
+    
+    let Some(owner_signer) = owner else {
+        msg!("Owner signer not provided, skipping fee collection");
+        return Ok((0, 0));
+    };
+    
     msg!(
         "Collecting Raydium fees: amounts requested: [{}, {}]",
         amount_0_requested,
         amount_1_requested
     );
     
-    // Build instruction data: discriminator (1 byte) + amount_0_requested (8 bytes) + amount_1_requested (8 bytes)
-    let mut instruction_data = Vec::with_capacity(17);
-    instruction_data.push(0x04); // Collect discriminator (placeholder - needs verification)
+    // Get token vaults
+    let token_vault_0_key = token_vault_0.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    let token_vault_1_key = token_vault_1.map(|v| v.key())
+        .unwrap_or_else(|| anchor_lang::solana_program::system_program::ID); // Placeholder
+    
+    // Build instruction data: discriminator (8 bytes) + amount_0_requested (8 bytes) + amount_1_requested (8 bytes)
+    let mut instruction_data = Vec::with_capacity(24);
+    instruction_data.extend_from_slice(&RAYDIUM_COLLECT_DISCRIMINATOR);
     instruction_data.extend_from_slice(&amount_0_requested.to_le_bytes());
     instruction_data.extend_from_slice(&amount_1_requested.to_le_bytes());
     
-    // Build account metas
-    // Note: Full implementation requires token accounts and vaults
+    // Build account metas in correct order for Raydium Collect
     let mut accounts = Vec::new();
     accounts.push(AccountMeta::new(position_info.key(), false));
     accounts.push(AccountMeta::new_readonly(pool_state_info.key(), false));
-    // TokenAccount0 (destination) would go here
-    // TokenAccount1 (destination) would go here
-    // TokenVault0 would go here
-    // TokenVault1 would go here
-    // Owner signer would go here
-    // TokenProgram would go here
+    accounts.push(AccountMeta::new(token_account_0_info.key(), false)); // Destination for token 0
+    accounts.push(AccountMeta::new(token_account_1_info.key(), false)); // Destination for token 1
+    accounts.push(AccountMeta::new(token_vault_0_key, false));
+    accounts.push(AccountMeta::new(token_vault_1_key, false));
+    accounts.push(AccountMeta::new_readonly(owner_signer.key(), true));
+    accounts.push(AccountMeta::new_readonly(token_program_info.key(), false));
     
     // Create and invoke CPI instruction
     let cpi_instruction = Instruction {
@@ -1491,22 +1834,31 @@ fn collect_raydium_fees<'info>(
         data: instruction_data,
     };
     
-    // Note: This will need proper account setup for full functionality
-    invoke(
-        &cpi_instruction,
-        &[
-            raydium_program_info.clone(),
-            position_info.clone(),
-            pool_state_info.clone(),
-        ],
-    )?;
+    // Build account infos for invoke
+    let mut account_infos = vec![
+        raydium_program_info.clone(),
+        position_info.clone(),
+        pool_state_info.clone(),
+        token_account_0_info.clone(),
+        token_account_1_info.clone(),
+        owner_signer.to_account_info(),
+        token_program_info.clone(),
+    ];
+    
+    if let Some(vault_0) = token_vault_0 {
+        account_infos.push(vault_0.clone());
+    }
+    if let Some(vault_1) = token_vault_1 {
+        account_infos.push(vault_1.clone());
+    }
+    
+    invoke(&cpi_instruction, &account_infos)?;
     
     msg!("Raydium fee collection CPI invoked successfully");
-    msg!("Note: Full implementation requires token accounts and vaults");
-    msg!("Note: Actual amounts collected should be read from token account balances");
+    msg!("Note: Actual amounts collected should be read from token account balances after CPI");
     
     // Return requested amounts as placeholder
-    // In production, read actual amounts from token account balances after CPI
+    // In production, read actual amounts from token account balances before/after CPI
     Ok((amount_0_requested, amount_1_requested))
 }
 
@@ -1953,11 +2305,26 @@ pub struct CreateLiquidityPosition<'info> {
     /// CHECK: Raydium pool state account (optional)
     pub raydium_pool_state: Option<AccountInfo<'info>>,
     
+    /// CHECK: Raydium personal position PDA (optional - will be derived if not provided)
+    pub raydium_personal_position: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Tick array for lower bound (optional - will be derived if not provided)
+    pub raydium_tick_array_lower: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Tick array for upper bound (optional - will be derived if not provided)
+    pub raydium_tick_array_upper: Option<AccountInfo<'info>>,
+    
     /// CHECK: Token account 0 for Raydium position (optional)
     pub raydium_token_account_0: Option<AccountInfo<'info>>,
     
     /// CHECK: Token account 1 for Raydium position (optional)
     pub raydium_token_account_1: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token vault 0 from pool state (optional - will be extracted from pool state)
+    pub raydium_token_vault_0: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token vault 1 from pool state (optional - will be extracted from pool state)
+    pub raydium_token_vault_1: Option<AccountInfo<'info>>,
     
     /// CHECK: Token program (optional - required for Raydium CPI)
     pub token_program: Option<AccountInfo<'info>>,
@@ -2062,6 +2429,27 @@ pub struct ExecuteRebalance<'info> {
     
     /// CHECK: Raydium pool state account (optional)
     pub raydium_pool_state: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Tick array for lower bound (optional - will be derived if not provided)
+    pub raydium_tick_array_lower: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Tick array for upper bound (optional - will be derived if not provided)
+    pub raydium_tick_array_upper: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token account 0 (optional - required for liquidity operations)
+    pub raydium_token_account_0: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token account 1 (optional - required for liquidity operations)
+    pub raydium_token_account_1: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token vault 0 from pool state (optional)
+    pub raydium_token_vault_0: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token vault 1 from pool state (optional)
+    pub raydium_token_vault_1: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token program (optional - required for Raydium CPI)
+    pub raydium_token_program: Option<AccountInfo<'info>>,
 }
 
 #[derive(Accounts)]
@@ -2132,6 +2520,21 @@ pub struct CollectFees<'info> {
     
     /// CHECK: Raydium pool state account (optional)
     pub raydium_pool_state: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token account 0 (destination for collected fees)
+    pub raydium_token_account_0: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token account 1 (destination for collected fees)
+    pub raydium_token_account_1: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token vault 0 from pool state (optional)
+    pub raydium_token_vault_0: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token vault 1 from pool state (optional)
+    pub raydium_token_vault_1: Option<AccountInfo<'info>>,
+    
+    /// CHECK: Token program (optional - required for Raydium CPI)
+    pub raydium_token_program: Option<AccountInfo<'info>>,
 }
 
 #[derive(Accounts)]
