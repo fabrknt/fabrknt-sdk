@@ -85,13 +85,13 @@ Portable components that work across Solana and EVM chains (Ethereum, Polygon, A
 
 Current development status and production readiness for each core module:
 
-| Module      | Devnet      | Testnet     | Mainnet             | Test Coverage         | Status                                | Known Limitations                     |
-| ----------- | ----------- | ----------- | ------------------- | --------------------- | ------------------------------------- | ------------------------------------- |
-| **Guard**   | ✅ Ready    | ✅ Ready    | ⚠️ Use with Caution | Good (86 tests)       | Comprehensive pattern detection       | Discord webhooks incomplete           |
-| **Risk**    | ✅ Ready    | ✅ Ready    | ⚠️ MVP Only         | Good (8 test files)   | Production MVP with fallback          | Switchboard/Pyth oracles TODO         |
-| **Loom**    | ✅ Ready    | ✅ Ready    | ⚠️ Partial          | Minimal (1 test file) | Jito bundles work                     | ShredStream gRPC not implemented      |
-| **Privacy** | ⚠️ Untested | ⚠️ Untested | ❌ Not Ready        | None (0 tests)        | Light Protocol integrated             | Phase 2 needs validation              |
-| **Flow**    | ❌ Blocked  | ❌ Blocked  | ❌ Not Ready        | Minimal (7.5%)        | Research phase                        | Raydium CLMM not integrated (4 TODOs) |
+| Module      | Devnet      | Testnet     | Mainnet             | Test Coverage         | Status                          | Known Limitations                     |
+| ----------- | ----------- | ----------- | ------------------- | --------------------- | ------------------------------- | ------------------------------------- |
+| **Guard**   | ✅ Ready    | ✅ Ready    | ⚠️ Use with Caution | Good (86 tests)       | Comprehensive pattern detection | Discord webhooks incomplete           |
+| **Risk**    | ✅ Ready    | ✅ Ready    | ⚠️ MVP Only         | Good (8 test files)   | Production MVP with fallback    | Switchboard/Pyth oracles TODO         |
+| **Loom**    | ✅ Ready    | ✅ Ready    | ⚠️ Partial          | Minimal (1 test file) | Jito bundles work               | ShredStream gRPC not implemented      |
+| **Privacy** | ⚠️ Testing  | ⚠️ Testing  | ❌ Not Ready        | Good (51 tests)       | Automated tests available       | Needs real Light Protocol integration |
+| **Flow**    | ❌ Blocked  | ❌ Blocked  | ❌ Not Ready        | Minimal (7.5%)        | Research phase                  | Raydium CLMM not integrated (4 TODOs) |
 
 **Legend:**
 
@@ -363,9 +363,9 @@ Example: Team vesting, investor unlocks, advisor compensation
 
 A unified platform of Web3 business intelligence and operations tools that work together to provide complete visibility into project health, growth, and value:
 
--   **PULSE** - Operational Verification (Team vitality & contribution scoring) - *Private Repository*
--   **TRACE** - Growth Verification (Marketing attribution & ROI tracking + comprehensive on-chain activity monitoring) - *Private Repository*
--   **FABRIC** - The Exit Layer (M&A terminal for Web3) - *Private Repository*
+-   **PULSE** - Operational Verification (Team vitality & contribution scoring) - _Private Repository_
+-   **TRACE** - Growth Verification (Marketing attribution & ROI tracking + comprehensive on-chain activity monitoring) - _Private Repository_
+-   **FABRIC** - The Exit Layer (M&A terminal for Web3) - _Private Repository_
 
 **Status:** In Development  
 **Synergy:** PULSE proves team vitality, TRACE proves marketing ROI and service activity, FABRIC enables high-trust business transfers
