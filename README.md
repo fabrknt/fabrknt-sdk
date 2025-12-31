@@ -1,306 +1,127 @@
-# Fabrknt Suite
+# Fabrknt SDK
 
-> **Web3 Project Lifecycle Management** - From team vitality to growth tracking to M&A facilitation
+> Open-source SDK for building crypto financial operations on Solana and EVM chains
 
-The Fabrknt Suite is a comprehensive platform for Web3 projects, providing verified signals throughout the entire project lifecycle.
+The Fabrknt SDK provides a comprehensive toolkit for Web3 developers to build secure, efficient financial operations with built-in security validation, risk assessment, and parallel execution.
 
-## 🏗️ Architecture
+## 📦 Packages
 
-### Apps
+### Core SDK
+- **[fabrknt](./fabrknt/)** - Main SDK package (`@fabrknt/sdk`)
+  - Core financial operations
+  - Chain abstraction (Solana + EVM)
+  - Pre-built patterns (DeFi, DAO treasury, AI agents)
 
-- **[PULSE](./apps/pulse)** (port 3001) - Team Vitality Tracking
-  - Decentralized contribution scoring across GitHub, Discord, and Notion
-  - Qualitative "Omotenashi Logic" rewards quality over quantity
-  - Soulbound Token (SBT) rewards for milestones
-  - Weekly organizational health reports
+### Security & Risk Modules
+- **[guard](./guard/)** - Real-time transaction validation
+  - 8 security patterns (slippage, drain, CPI, reentrancy, etc.)
+  - 3 enforcement modes (block, warn, monitor)
 
-- **[TRACE](./apps/trace)** (port 3002) - Marketing Attribution & Activity Monitoring
-  - High-precision click-to-wallet attribution
-  - On-chain conversion tracking (mint, swap, stake, vote)
-  - Bot & Sybil detection
-  - Service health metrics (DAU/WAU/MAU, Protocol Activity Score)
+- **[risk](./risk/)** - AI-driven risk assessment
+  - RWA risk scoring
+  - Compliance checks
+  - Oracle integrity monitoring
 
-- **[FABRIC](./apps/fabric)** (port 3003) - M&A Terminal for Web3
-  - Verified project listings with PULSE + TRACE data
-  - Fabrknt Score composite metric
-  - One-click NDA with wallet signatures
-  - Atomic escrow for secure asset transfers
+### Performance & Optimization
+- **[loom](./loom/)** - Parallel execution engine
+  - Jito bundle integration
+  - Multi-transaction optimization
+  - Gas optimization
 
-### Shared Packages
+- **[flow](./flow/)** - DEX integration layer
+  - Jupiter V6 integration
+  - Multi-DEX liquidity routing
+  - Raydium CLMM support (in progress)
 
-- **[@fabrknt/ui](./packages/ui)** - Shared React components (Shadcn UI + Radix)
-- **[@fabrknt/auth](./packages/auth)** - Cognito + wallet authentication
-- **[@fabrknt/db](./packages/db)** - Prisma client and database utilities
-- **[@fabrknt/api](./packages/api)** - API utilities, error handling, validation
-- **[@fabrknt/blockchain](./packages/blockchain)** - Blockchain integrations (Solana + EVM)
+### Privacy
+- **[privacy](./privacy/)** - ZK compression
+  - Light Protocol integration
+  - Compressed state management
+  - Experimental (Phase 2)
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- pnpm 8+
-- Docker & Docker Compose
-
-### Quick Start
+## 🚀 Quick Start
 
 ```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd fabrknt
-
-# 2. Copy environment variables
-cp .env.example .env
-cp apps/pulse/.env.example apps/pulse/.env.local
-cp apps/trace/.env.example apps/trace/.env.local
-cp apps/fabric/.env.example apps/fabric/.env.local
-
-# 3. Install dependencies and setup infrastructure
-pnpm setup
-
-# 4. Apply database schema
-pnpm db:push
-
-# 5. Start all apps in development mode
-pnpm dev
+npm install @fabrknt/sdk
+# or
+yarn add @fabrknt/sdk
 ```
 
-### Individual App Development
+```typescript
+import { BatchPayoutPattern, Guard } from "@fabrknt/sdk";
 
-```bash
-# Run only PULSE
-pnpm pulse:dev
+// Create secure batch payout with built-in security
+const payroll = new BatchPayoutPattern({
+  name: "Monthly Payroll",
+  recipients: [
+    { address: "...", amount: 1000 },
+    { address: "...", amount: 2000 },
+  ],
+  guard: new Guard({
+    maxSlippage: 0.01,
+    mode: "block"
+  }),
+  enableParallel: true
+});
 
-# Run only TRACE
-pnpm trace:dev
-
-# Run only FABRIC
-pnpm fabric:dev
+const result = await payroll.execute();
 ```
 
-## 🐳 Docker Services
+## 📚 Documentation
 
-Local development uses Docker Compose for PostgreSQL and Redis:
+- **[Main SDK Docs](./fabrknt/README.md)** - Complete SDK documentation
+- **[Examples](./fabrknt/examples/)** - Code examples
+- **[Business Plan](./fabrknt/BUSINESS_PLAN.md)** - SDK vision and roadmap
+- **[Known Limitations](./fabrknt/KNOWN_LIMITATIONS.md)** - Current limitations
 
-```bash
-# Start services
-pnpm docker:up
-
-# Stop services
-pnpm docker:down
-
-# View logs
-pnpm docker:logs
-```
-
-**Available Services:**
-- PostgreSQL: `localhost:5432` (user: `fabrknt`, password: `fabrknt_dev_password`)
-- Redis: `localhost:6379`
-- pgAdmin: `http://localhost:5050` (admin@fabrknt.local / admin)
-- Redis Commander: `http://localhost:8081`
-
-## 📊 Database
-
-The suite uses a shared PostgreSQL database managed by Prisma.
-
-### Common Commands
-
-```bash
-# Generate Prisma Client
-pnpm db:generate
-
-# Push schema to database (dev)
-pnpm db:push
-
-# Create migration
-pnpm db:migrate
-
-# Open Prisma Studio
-pnpm db:studio
-```
-
-### Schema Overview
-
-The database is organized into three main sections:
-
-1. **PULSE Models**: `User`, `Organization`, `Contribution`, `Praise`, `SBTToken`, `HealthScore`
-2. **TRACE Models**: `Campaign`, `Click`, `Conversion`, `ActivityMetrics`, `ContractInteraction`
-3. **FABRIC Models**: `Listing`, `SuiteRibbonData`, `NDASignature`, `ProofOfFunds`, `Escrow`
-
-See [packages/db/prisma/schema.prisma](./packages/db/prisma/schema.prisma) for full schema.
-
-## 🏃 Development Workflow
-
-### Code Quality
-
-```bash
-# Lint all packages
-pnpm lint
-
-# Type check all packages
-pnpm type-check
-
-# Run both
-pnpm check
-
-# Format code
-pnpm format
-```
-
-### Build
-
-```bash
-# Build all apps and packages
-pnpm build
-
-# Build specific app
-pnpm --filter @fabrknt/pulse build
-```
-
-## 📦 Monorepo Structure
+## 🏗️ Repository Structure
 
 ```
-fabrknt/
-├── apps/
-│   ├── pulse/           # Team vitality tracking app
-│   ├── trace/           # Marketing attribution app
-│   └── fabric/          # M&A terminal app
-├── packages/
-│   ├── ui/              # Shared UI components
-│   ├── auth/            # Authentication utilities
-│   ├── db/              # Database & Prisma client
-│   ├── api/             # API utilities
-│   └── blockchain/      # Blockchain integrations
-├── infrastructure/      # Infrastructure scripts
-├── docker-compose.yml   # Local development services
-├── turbo.json          # Turborepo configuration
-└── pnpm-workspace.yaml # pnpm workspace config
+fabrknt-sdk/
+├── fabrknt/          # Core SDK (@fabrknt/sdk v0.3.1)
+├── guard/            # Security validation module
+├── loom/             # Parallel execution module
+├── flow/             # DEX integration module
+├── risk/             # Risk assessment module
+├── privacy/          # ZK compression module
+├── docs/             # Documentation
+├── awesome-lists/    # Curated resources
+├── website/          # SDK website
+└── marketing/        # Marketing materials
 ```
 
-## 🔐 Environment Variables
+## 🌟 Key Features
 
-Each app requires specific environment variables:
+- **Chain Abstraction** - Write once, run on Solana and EVM chains
+- **Built-in Security** - Real-time validation with Guard module
+- **Risk Assessment** - AI-driven risk scoring for RWA and DeFi
+- **Parallel Execution** - Optimize gas with Loom's parallel processing
+- **Pre-built Patterns** - Production-ready templates for common operations
+- **Type Safety** - Full TypeScript support
 
-### Shared (all apps)
-- `DATABASE_URL` - PostgreSQL connection string
-- `COGNITO_*` - AWS Cognito configuration
+## 📊 Status
 
-### PULSE Specific
-- `GITHUB_*` - GitHub App credentials
-- `DISCORD_*` - Discord bot credentials
-- `CHAINLINK_*` - Chainlink Functions for SBT minting
+- **Version**: 0.3.1 (Beta)
+- **Recommended**: Devnet/Testnet only
+- **Production**: Guard + Risk modules only
 
-### TRACE Specific
-- `ALCHEMY_*` - Alchemy API for EVM event tracking
-- `HELIUS_*` - Helius API for Solana event tracking
-- `REDIS_URL` - Redis connection string
+## 🔗 Related Projects
 
-### FABRIC Specific
-- `PULSE_API_*` - PULSE API integration
-- `TRACE_API_*` - TRACE API integration
-- Escrow contract addresses
-
-See `.env.example` files for complete configuration.
-
-## 🚢 Deployment
-
-All three apps are designed to deploy on AWS Amplify with the following AWS services:
-
-- **Frontend**: AWS Amplify
-- **Backend**: AWS Lambda + API Gateway
-- **Database**: Amazon RDS PostgreSQL
-- **Cache**: Amazon ElastiCache Redis (TRACE only)
-- **Auth**: Amazon Cognito
-- **Storage**: Amazon S3
-- **Monitoring**: Amazon CloudWatch
-
-See individual app `amplify.yml` files for deployment configurations.
-
-## 📝 Tech Stack
-
-### Frontend
-- Next.js 14 (App Router)
-- React 18
-- TypeScript
-- Tailwind CSS
-- Shadcn UI + Radix UI
-- Recharts/Nivo (charts)
-- TanStack Query
-- Zustand (state management)
-
-### Backend
-- Node.js 20
-- Prisma ORM
-- PostgreSQL 16
-- Redis 7
-- Zod (validation)
-
-### Blockchain
-- Solana Web3.js
-- Viem (EVM)
-- Alchemy SDK
-- Helius DAS API
-
-### DevOps
-- Turborepo (monorepo)
-- pnpm (package manager)
-- Docker Compose (local dev)
-- AWS Amplify (deployment)
-
-## 🗺️ Roadmap
-
-### Phase 0: Foundation ✅
-- [x] Monorepo setup
-- [x] Shared packages
-- [x] Database schema
-- [x] Basic app structure
-- [x] Docker environment
-
-### Phase 1: TRACE Implementation (Weeks 3-8)
-- [ ] Core attribution engine
-- [ ] On-chain event processing
-- [ ] Activity monitoring (DAU/WAU/MAU)
-- [ ] Link redirection service
-
-### Phase 2: PULSE Implementation (Weeks 9-14)
-- [ ] Contribution tracking
-- [ ] Platform integrations (GitHub, Discord, Notion)
-- [ ] Omotenashi scoring algorithm
-- [ ] SBT minting
-
-### Phase 3: FABRIC Implementation (Weeks 15-20)
-- [ ] Listing engine
-- [ ] Suite Ribbon integration
-- [ ] Atomic escrow contracts
-- [ ] NDA & Proof of Funds
-
-### Phase 4: Integration & Polish (Weeks 21-24)
-- [ ] Cross-app integration
-- [ ] Analytics & monitoring
-- [ ] Documentation
-- [ ] Beta testing
-
-### Phase 5: Production Launch (Week 25+)
-- [ ] Security audit
-- [ ] Performance optimization
-- [ ] Staged rollout (TRACE → PULSE → FABRIC)
+- **[Fabrknt Suite](https://github.com/fabrknt/fabrknt-suite)** - SaaS applications built with Fabrknt SDK (PULSE, TRACE, FABRIC)
 
 ## 🤝 Contributing
 
-This is a private monorepo. For development:
-
-1. Create a feature branch from `master`
-2. Make your changes
-3. Run `pnpm check` before committing
-4. Submit a pull request
+See [CONTRIBUTING.md](./fabrknt/CONTRIBUTING.md) for contribution guidelines.
 
 ## 📄 License
 
-Proprietary - All rights reserved
+See individual package licenses. Core SDK is typically MIT or Apache 2.0.
 
 ## 🆘 Support
 
-For issues or questions, please contact the development team.
+- **Issues**: [GitHub Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/fabrknt/fabrknt-sdk/discussions)
+- **Documentation**: [Full Docs](./fabrknt/README.md)
 
 ---
 
