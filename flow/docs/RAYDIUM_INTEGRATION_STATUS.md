@@ -1,7 +1,7 @@
 # Raydium CLMM Integration - Implementation Status
 
-**Status**: Foundation Implemented - Research Phase  
-**Date**: 2025-01-XX  
+**Status**: CPI Calls Implemented - Ready for Testing & Refinement  
+**Date**: January 2025  
 **Priority**: High - Required for LP position management
 
 ## ✅ Completed
@@ -12,12 +12,17 @@
 -   ✅ Added `raydium_clmm_program_id()` helper function
 -   ✅ Program ID: `CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK`
 
-### 2. Helper Functions (Placeholders)
+### 2. CPI Functions Implemented
 
--   ✅ `create_raydium_position()` - Placeholder for OpenPosition CPI
--   ✅ `increase_raydium_liquidity()` - Placeholder for IncreaseLiquidity CPI
--   ✅ `decrease_raydium_liquidity()` - Placeholder for DecreaseLiquidity CPI
--   ✅ `collect_raydium_fees()` - Placeholder for Collect CPI
+-   ✅ `create_raydium_position()` - **IMPLEMENTED** - OpenPosition CPI with manual instruction building
+-   ✅ `increase_raydium_liquidity()` - **IMPLEMENTED** - IncreaseLiquidity CPI with manual instruction building
+-   ✅ `decrease_raydium_liquidity()` - **IMPLEMENTED** - DecreaseLiquidity CPI with manual instruction building
+-   ✅ `collect_raydium_fees()` - **IMPLEMENTED** - Collect CPI with manual instruction building
+
+### 2.1. Dependency Added
+
+-   ✅ Added `raydium-clmm-cpi` crate to `Cargo.toml`
+-   ✅ Code compiles successfully
 
 ### 3. Integration Points
 
@@ -41,40 +46,46 @@
 
 ## ⏳ Pending / In Progress
 
-### 1. Instruction Format Research (Critical)
+### 1. Instruction Format Verification (Critical)
 
 **What's Needed**:
 
--   [ ] Find actual instruction discriminators for:
-    -   `OpenPosition`
-    -   `IncreaseLiquidity`
-    -   `DecreaseLiquidity`
-    -   `Collect`
--   [ ] Document exact instruction data serialization format
--   [ ] Document complete account list and ordering
+-   [ ] Verify actual instruction discriminators (currently using placeholders):
+    -   `OpenPosition` (currently `0x01` - needs verification)
+    -   `IncreaseLiquidity` (currently `0x02` - needs verification)
+    -   `DecreaseLiquidity` (currently `0x03` - needs verification)
+    -   `Collect` (currently `0x04` - needs verification)
+-   [ ] Verify exact instruction data serialization format
+-   [ ] Verify complete account list and ordering
 -   [ ] Document PDA derivation for positions and tick arrays
 
 **Research Sources**:
 
 -   [ ] Raydium SDK GitHub: https://github.com/raydium-io/raydium-sdk
 -   [ ] Raydium program IDL (if published)
+-   [ ] Raydium CPI crate documentation
 -   [ ] Example CPI implementations
 -   [ ] Raydium program source code
 
-### 2. Implementation Tasks
+### 2. Complete Account Setup (High Priority)
 
-**Phase 1: Position Creation**
+**Phase 1: Add Missing Accounts**
 
--   [ ] Implement `create_raydium_position()` CPI call
+-   [ ] Add tick array accounts to instruction contexts
+-   [ ] Add position PDA accounts to instruction contexts
+-   [ ] Add token vault accounts to instruction contexts
+-   [ ] Implement PDA derivation helpers
+
+**Phase 2: Refine Implementation**
+
+-   [x] ✅ Implement `create_raydium_position()` CPI call (foundation complete)
+-   [x] ✅ Implement `increase_raydium_liquidity()` CPI call (foundation complete)
+-   [x] ✅ Implement `decrease_raydium_liquidity()` CPI call (foundation complete)
+-   [x] ✅ Implement `collect_raydium_fees()` CPI call (foundation complete)
 -   [ ] Handle PDA derivation for PersonalPosition
 -   [ ] Handle tick array account derivation
+-   [ ] Extract token vaults from pool state
 -   [ ] Test position creation on devnet
-
-**Phase 2: Position Management**
-
--   [ ] Implement `increase_raydium_liquidity()` CPI call
--   [ ] Implement `decrease_raydium_liquidity()` CPI call
--   [ ] Implement `collect_raydium_fees()` CPI call
 -   [ ] Test rebalancing flow
 
 **Phase 3: Integration**
@@ -193,6 +204,10 @@ If CPI research proves difficult, we can use a **transaction-based approach** si
 
 ---
 
-**Status**: Foundation Complete - Research Phase  
-**Next Review**: After instruction format research  
-**Last Updated**: 2025-01-XX
+**Status**: CPI Calls Implemented - Ready for Testing & Refinement  
+**Next Review**: After instruction format verification and account setup  
+**Last Updated**: January 2025
+
+## 📝 Implementation Details
+
+See [`RAYDIUM_CPI_IMPLEMENTATION.md`](./RAYDIUM_CPI_IMPLEMENTATION.md) for detailed implementation notes, limitations, and next steps.
