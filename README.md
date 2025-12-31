@@ -7,7 +7,7 @@ The Fabrknt SDK provides a comprehensive toolkit for Web3 developers to build se
 ## 📦 Packages
 
 ### Core SDK
-- **[fabrknt](./fabrknt/)** - Main SDK package (`@fabrknt/sdk`)
+- **[core](./core/)** - Main SDK package (`@fabrknt/sdk`)
   - Core financial operations
   - Chain abstraction (Solana + EVM)
   - Pre-built patterns (DeFi, DAO treasury, AI agents)
@@ -69,25 +69,22 @@ const result = await payroll.execute();
 
 ## 📚 Documentation
 
-- **[Main SDK Docs](./fabrknt/README.md)** - Complete SDK documentation
-- **[Examples](./fabrknt/examples/)** - Code examples
-- **[Business Plan](./fabrknt/BUSINESS_PLAN.md)** - SDK vision and roadmap
-- **[Known Limitations](./fabrknt/KNOWN_LIMITATIONS.md)** - Current limitations
+- **[Main SDK Docs](./core/README.md)** - Complete SDK documentation
+- **[Examples](./core/examples/)** - Code examples
+- **[Business Plan](./core/BUSINESS_PLAN.md)** - SDK vision and roadmap
+- **[Known Limitations](./core/KNOWN_LIMITATIONS.md)** - Current limitations
 
 ## 🏗️ Repository Structure
 
 ```
 fabrknt-sdk/
-├── fabrknt/          # Core SDK (@fabrknt/sdk v0.3.1)
+├── core/             # Core SDK (@fabrknt/sdk v0.3.1)
 ├── guard/            # Security validation module
 ├── loom/             # Parallel execution module
 ├── flow/             # DEX integration module
 ├── risk/             # Risk assessment module
 ├── privacy/          # ZK compression module
-├── docs/             # Documentation
-├── awesome-lists/    # Curated resources
-├── website/          # SDK website
-└── marketing/        # Marketing materials
+└── docs/             # Documentation
 ```
 
 ## 🌟 Key Features
@@ -111,7 +108,7 @@ fabrknt-sdk/
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](./fabrknt/CONTRIBUTING.md) for contribution guidelines.
+See [CONTRIBUTING.md](./core/CONTRIBUTING.md) for contribution guidelines.
 
 ## 📄 License
 
@@ -121,7 +118,7 @@ See individual package licenses. Core SDK is typically MIT or Apache 2.0.
 
 - **Issues**: [GitHub Issues](https://github.com/fabrknt/fabrknt-sdk/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/fabrknt/fabrknt-sdk/discussions)
-- **Documentation**: [Full Docs](./fabrknt/README.md)
+- **Documentation**: [Full Docs](./core/README.md)
 
 ---
 
