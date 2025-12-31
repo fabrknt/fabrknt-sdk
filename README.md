@@ -2,6 +2,10 @@
 
 > Open-source SDK for building crypto financial operations on Solana and EVM chains
 
+[![CI](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/ci.yml)
+[![Test Coverage](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/test-coverage.yml/badge.svg)](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/test-coverage.yml)
+[![Tests](https://img.shields.io/badge/tests-545%20passing-brightgreen)](https://github.com/fabrknt/fabrknt-sdk/tree/main/core/tests)
+
 The Fabrknt SDK provides a comprehensive toolkit for Web3 developers to build secure, efficient financial operations with built-in security validation, risk assessment, and parallel execution.
 
 ## 📦 Packages

@@ -2,6 +2,10 @@
 
 **Web3 Business Intelligence Platform**
 
+[![CI](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/ci.yml)
+[![Test Coverage](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/test-coverage.yml/badge.svg)](https://github.com/fabrknt/fabrknt-sdk/actions/workflows/test-coverage.yml)
+[![Tests](https://img.shields.io/badge/tests-545%20passing-brightgreen)](https://github.com/fabrknt/fabrknt-sdk/tree/main/core/tests)
+
 > **⚠️ BETA - DEVNET/TESTNET RECOMMENDED**
 > Fabrknt Suite and SDK are actively developed and tested on devnet/testnet. Individual modules have varying maturity levels - see [Module Status](#module-status) below. Use caution on mainnet and review module-specific limitations.
 
