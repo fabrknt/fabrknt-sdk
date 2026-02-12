@@ -377,8 +377,10 @@ pub mod flow {
                 XLiquidityEngineError::HumanApprovalRequired
             );
             if let Some(approver) = &ctx.accounts.approver {
+                let expected_approver = decision.human_approver
+                    .ok_or(error!(XLiquidityEngineError::HumanApprovalRequired))?;
                 require!(
-                    decision.human_approver.unwrap() == approver.key(),
+                    expected_approver == approver.key(),
                     XLiquidityEngineError::InvalidApprover
                 );
             } else {
@@ -538,7 +540,8 @@ pub mod flow {
         position.current_price_upper = decision.new_price_upper;
         position.last_rebalance_slot = clock.slot;
         position.last_rebalance_timestamp = clock.unix_timestamp;
-        position.rebalance_count = position.rebalance_count.checked_add(1).unwrap();
+        position.rebalance_count = position.rebalance_count.checked_add(1)
+            .ok_or(error!(XLiquidityEngineError::ArithmeticOverflow))?;
         position.updated_at = clock.unix_timestamp;
 
         // Update decision status
@@ -681,14 +684,14 @@ pub mod flow {
         let config = &ctx.accounts.config;
         let _protocol_fee_a = (position.total_fees_earned_a as u128)
             .checked_mul(config.protocol_fee_bps as u128)
-            .unwrap()
+            .ok_or(error!(XLiquidityEngineError::ArithmeticOverflow))?
             .checked_div(10000)
-            .unwrap() as u64;
+            .ok_or(error!(XLiquidityEngineError::ArithmeticOverflow))? as u64;
         let _protocol_fee_b = (position.total_fees_earned_b as u128)
             .checked_mul(config.protocol_fee_bps as u128)
-            .unwrap()
+            .ok_or(error!(XLiquidityEngineError::ArithmeticOverflow))?
             .checked_div(10000)
-            .unwrap() as u64;
+            .ok_or(error!(XLiquidityEngineError::ArithmeticOverflow))? as u64;
 
         // Note: Actual token transfer would happen via CPI to token program
         // This is just updating the accounting
@@ -2235,6 +2238,8 @@ pub enum XLiquidityEngineError {
     NoFeesToCollect,
     #[msg("Approval not required")]
     ApprovalNotRequired,
+    #[msg("Arithmetic overflow")]
+    ArithmeticOverflow,
 }
 
 // ============================================================================
