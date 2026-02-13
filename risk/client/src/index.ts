@@ -64,7 +64,7 @@ export class PulsarClient {
     });
 
     this.connection = new Connection(
-      config.rpcUrl || 'https://api.mainnet-beta.solana.com',
+      config.rpcUrl || process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
       'confirmed'
     );
 
